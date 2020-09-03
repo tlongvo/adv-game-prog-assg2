@@ -1,5 +1,0 @@
-C:\Users\Kevin\Documents\2020\Week5-Assessment2Test\Week5StartingPoint\Week5StartingPoint\Intermediate\Build\Win64\UE4Editor\Development\AdvGamesProgramming\Definitions.AdvGamesProgramming.h
-C:\Program Files\Epic Games\UE_4.24\Engine\Source\Runtime\CoreUObject\Public\UObject/GeneratedCppIncludes.h
-C:\Program Files\Epic Games\UE_4.24\Engine\Source\Runtime\CoreUObject\Public\UObject/MetaData.h
-C:\Users\Kevin\Documents\2020\Week5-Assessment2Test\Week5StartingPoint\Week5StartingPoint\Source\AdvGamesProgramming/HealthComponent.h
-C:\Users\Kevin\Documents\2020\Week5-Assessment2Test\Week5StartingPoint\Week5StartingPoint\Intermediate\Build\Win64\UE4Editor\Inc\AdvGamesProgramming\HealthComponent.generated.h
