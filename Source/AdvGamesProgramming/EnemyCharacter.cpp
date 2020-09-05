@@ -26,6 +26,7 @@ void AEnemyCharacter::BeginPlay()
 	bCanSeeActor = false; 
 	bCanSeeTeammate = false; 
 	HealthComponent = FindComponentByClass<UHealthComponent>();
+	MovementComponent = FindComponentByClass<UCharacterMovementComponent>(); 
 }
 
 // Called every frame
@@ -46,10 +47,16 @@ void AEnemyCharacter::Tick(float DeltaTime)
 			CurrentAgentState = AgentState::EVADE;
 			Path.Empty();
 		}
-		else if (bCanSeeTeammate)
+		else if (bCanSeeTeammate && TeammateHealthComponent->HealthPercentageRemaining() <= 0.4)
 		{
 
+			//if enemy sees teammate and teammate is hurt, go to it and follow it.
+			//engage state placeholder, its basically a follow function
+			UE_LOG(LogTemp, Error, TEXT("Helping Teammate from Patrol"));
+			CurrentAgentState = AgentState::FOLLOW; 
+			
 		}
+		MoveAlongPath();
 	}
 	else if (CurrentAgentState == AgentState::ENGAGE)
 	{
@@ -63,6 +70,7 @@ void AEnemyCharacter::Tick(float DeltaTime)
 			CurrentAgentState = AgentState::EVADE;
 			Path.Empty();
 		}
+		MoveAlongPath();
 	}
 	else if (CurrentAgentState == AgentState::EVADE)
 	{
@@ -76,9 +84,20 @@ void AEnemyCharacter::Tick(float DeltaTime)
 			CurrentAgentState = AgentState::ENGAGE;
 			Path.Empty();
 		}
+		MoveAlongPath();
+	}
+	else if (CurrentAgentState == AgentState::FOLLOW)
+	{
+		AgentFollow();
+		//If can see actor, and teammate has recovered, engage actor
+		//if can't see actor, and teamamate has recovered, go patrol,
+		//if can see actor, and teammate hasnt recovered, and low hp, evade (but teammate also is evading, so it can still follow?)
+		//maybe copy teammates path 
+
+		MoveAlongPath();
 	}
 
-	MoveAlongPath();
+	
 }
 
 // Called to bind functionality to input
@@ -104,9 +123,8 @@ void AEnemyCharacter::AgentEngage() {
 			ANavigationNode* Nearest = Manager->FindNearestNode(DetectedActor->GetActorLocation());
 			Path = Manager->GeneratePath(CurrentNode, Nearest);
 		}
-
-		FVector DirectionToTarget = DetectedActor->GetActorLocation() - GetActorLocation();
-		Fire(DirectionToTarget);
+			FVector DirectionToTarget = DetectedActor->GetActorLocation() - GetActorLocation();
+			Fire(DirectionToTarget);
 	}
 }
 
@@ -125,32 +143,59 @@ void AEnemyCharacter::AgentEvade()
 	}
 }
 
+void AEnemyCharacter::AgentFollow() 
+{
+	//check if Enemy has no set path
+	//Assign new path to Teammate
+	if (bCanSeeTeammate)
+	{	
+		//increase movement speed, to keep up with teammate, 
+		MovementComponent->MaxWalkSpeed = 1000.0f; 
+		if (Path.Num() == 0 && Manager != NULL && DetectedActor != NULL)
+		{
+			ANavigationNode* Nearest = Manager->FindNearestNode(DetectedActor->GetActorLocation());
+			Path = Manager->GeneratePath(CurrentNode, Nearest);
+		} 
+		
+	}
+	
+}
+
 void AEnemyCharacter::SensePlayer(AActor* ActorSensed, FAIStimulus Stimulus) 
 {
 	if (Stimulus.WasSuccessfullySensed())
 	{
 		DetectedActor = ActorSensed;
-		//bCanSeeActor = true; 
 		//Check if Actor is the Player or Enemy
 		
 		if (DetectedActor->GetName() == FString("PlayerCharacterBlueprint_2")) 
 		{
 			bCanSeeActor = true;
 		}
-		//If Enemy detects another enemy type or teammate
-		else if (DetectedActor->GetName() == FString("EnemyCharacterBlueprint_C_0")
-			|| DetectedActor->GetName() == FString("EnemyCharacterBlueprint_C_1"))
+		//If Enemy sees another EnemyCharacter
+		//Gather their Health Information
+		else if (DetectedActor->GetClass()->GetName() == FString("EnemyCharacterBlueprint_C"))
 		{
 			bCanSeeTeammate = true; 
+			//Copy Teammate's HealthComponent
+			TeammateHealthComponent = DetectedActor->FindComponentByClass<UHealthComponent>();
+			//UE_LOG(LogTemp, Warning, TEXT("Enemy Detected: %s"), *DetectedActor->GetName());
 		}
 		
-		UE_LOG(LogTemp, Warning, TEXT("Player Detected %s"), *DetectedActor->GetName());
+		//Check if Health Component exists on Detected Actor
+		//Note: Player doesn't have a health component
+		//if(DetectedActor->FindComponentByClass<UHealthComponent>() != nullptr)
+		//{
+		//.
+		//UE_LOG(LogTemp, Warning, TEXT("Component Detected: %s"), *DetectedActor->GetClass()->GetName());
+		//}
+		
 	}
 	else
 	{
 		bCanSeeActor = false; 
 		bCanSeeTeammate = false; 
-		UE_LOG(LogTemp, Warning, TEXT("Player Lost"));
+		UE_LOG(LogTemp, Warning, TEXT("Actor Lost"));
 	}
 }
 
