@@ -47,7 +47,7 @@ public:
 	UHealthComponent* HealthComponent;
 	UHealthComponent* TeammateHealthComponent; 
 	UCharacterMovementComponent* MovementComponent; 
-	AEnemyCharacter* TeammateCharacter; 
+	AActor* TeammateActor; 
 	
 
 	UPROPERTY(VisibleAnywhere)
