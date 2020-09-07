@@ -16,7 +16,6 @@ AEnemyCharacter::AEnemyCharacter()
 void AEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	//attach AI Perception Components to variable 
 	PerceptionComponent = FindComponentByClass<UAIPerceptionComponent>();
 	if (!PerceptionComponent) { UE_LOG(LogTemp, Error, TEXT("NO PERCEPTION COMPONENT FOUND")) }
 	PerceptionComponent->OnTargetPerceptionUpdated.AddDynamic(this, &AEnemyCharacter::SensePlayer);
@@ -37,6 +36,10 @@ void AEnemyCharacter::BeginPlay()
 void AEnemyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime); 
+
+	//Health Regeneration
+	HealthComponent->CurrentHealth += 0.0025; 
+
 	//Fire(FVector::ZeroVector);
 	if (CurrentAgentState == AgentState::PATROL)
 	{
@@ -143,7 +146,8 @@ void AEnemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 }
 
-void AEnemyCharacter::AgentPatrol() {
+void AEnemyCharacter::AgentPatrol() 
+{
 
 	if (Path.Num() == 0 && Manager != NULL)
 	{
@@ -151,7 +155,8 @@ void AEnemyCharacter::AgentPatrol() {
 	}
 }
 
-void AEnemyCharacter::AgentEngage() {
+void AEnemyCharacter::AgentEngage() 
+{
 	//UE_LOG(LogTemp, Log, TEXT("ENGAGE FUNCTION EXECUTED, %s"), bCanSeeActor ? TEXT("true") : TEXT("false"));
 	if (bCanSeeActor)
 	{
@@ -163,7 +168,6 @@ void AEnemyCharacter::AgentEngage() {
 			ANavigationNode* Nearest = Manager->FindNearestNode(DetectedActor->GetActorLocation());
 			Path = Manager->GeneratePath(CurrentNode, Nearest);
 		}
-			
 	}
 }
 
@@ -202,7 +206,7 @@ void AEnemyCharacter::AgentFollow()
 		if (Path.Num() == 0 && Manager != NULL && TeammateActor != NULL)
 		{
 			//find node nearest to teammate 
-			UE_LOG(LogTemp, Error, TEXT("Path EMPTY -> Generating Path"));
+			//UE_LOG(LogTemp, Error, TEXT("Path EMPTY -> Generating Path"));
 			ANavigationNode* Nearest = Manager->FindNearestNode(TeammateActor->GetActorLocation());
 			Path = Manager->GeneratePath(CurrentNode, Nearest);
 		} 
@@ -256,6 +260,7 @@ void AEnemyCharacter::MoveAlongPath()
 			WorldDirection.Normalize();
 			//UE_LOG(LogTemp, Display, TEXT("The World Direction(X:%f,Y:%f,Z:%f)"), WorldDirection.X, WorldDirection.Y, WorldDirection.Z)
 			AddMovementInput(WorldDirection, 1.0f);
+
 			//Get the AI to face in the direction of travel.
 			FRotator FaceDirection = WorldDirection.ToOrientationRotator();
 			FaceDirection.Roll = 0.f;
