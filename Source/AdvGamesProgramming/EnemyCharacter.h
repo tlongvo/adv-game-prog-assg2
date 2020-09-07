@@ -42,12 +42,15 @@ public:
 	AAIManager* Manager;
 	UAIPerceptionComponent* PerceptionComponent; 
 	AActor* DetectedActor;
+	AActor* TeammateActor;
 	bool bCanSeeActor; 
 	bool bCanSeeTeammate;
+	int32 FollowValue;
 	UHealthComponent* HealthComponent;
 	UHealthComponent* TeammateHealthComponent; 
 	UCharacterMovementComponent* MovementComponent; 
-	AActor* TeammateActor; 
+	
+	
 	
 
 	UPROPERTY(VisibleAnywhere)
