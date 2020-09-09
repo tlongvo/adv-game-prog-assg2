@@ -119,6 +119,7 @@ void AEnemyCharacter::Tick(float DeltaTime)
 		{
 			bCanFollowTeammate = false;
 			CurrentAgentState = AgentState::EVADE; 
+			Path.Empty();
 			MovementComponent->MaxWalkSpeed = 600.0f;
 		}
 		//If healthy & can see the Player and Teammate is recovered, change to ENGAGE
@@ -127,6 +128,7 @@ void AEnemyCharacter::Tick(float DeltaTime)
 		{
 			bCanFollowTeammate = false;
 			CurrentAgentState = AgentState::ENGAGE; 
+			Path.Empty();
 			MovementComponent->MaxWalkSpeed = 600.0f;
 		}
 		MoveAlongPath();
