@@ -29,7 +29,14 @@ void UHealthComponent::BeginPlay()
 void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	//Health Regen
+	CurrentHealth += 0.0025;
 
+	//Limit Current HP to Max HP 
+	if (CurrentHealth > MaxHealth)
+	{
+		CurrentHealth = MaxHealth; 
+	}
 	// ...
 }
 

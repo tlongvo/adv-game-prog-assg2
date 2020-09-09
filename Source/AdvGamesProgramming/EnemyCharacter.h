@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "AIManager.h"
 #include "HealthComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "EnemyCharacter.generated.h"
 
@@ -15,7 +16,8 @@ enum class AgentState : uint8
 {
 	PATROL,
 	ENGAGE,
-	EVADE
+	EVADE,
+	FOLLOW
 };
 
 UCLASS()
@@ -40,11 +42,13 @@ public:
 	AAIManager* Manager;
 	UAIPerceptionComponent* PerceptionComponent; 
 	AActor* DetectedActor;
+	AActor* TeammateActor;
 	bool bCanSeeActor; 
 	bool bCanSeeTeammate;
+	bool bCanFollowTeammate; 
 	UHealthComponent* HealthComponent;
-	AActor* DetectedTeammate; 
-	
+	UHealthComponent* TeammateHealthComponent; 
+	UCharacterMovementComponent* MovementComponent; 
 
 	UPROPERTY(VisibleAnywhere)
 		AgentState CurrentAgentState;
@@ -55,6 +59,7 @@ public:
 	void AgentPatrol();
 	void AgentEngage();
 	void AgentEvade(); 
+	void AgentFollow();
 
 	UFUNCTION()
 	void SensePlayer(AActor* ActorSensed, FAIStimulus Stimulus);
