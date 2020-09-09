@@ -45,13 +45,10 @@ public:
 	AActor* TeammateActor;
 	bool bCanSeeActor; 
 	bool bCanSeeTeammate;
-	int32 FollowValue;
+	bool bCanFollowTeammate; 
 	UHealthComponent* HealthComponent;
 	UHealthComponent* TeammateHealthComponent; 
 	UCharacterMovementComponent* MovementComponent; 
-	
-	
-	
 
 	UPROPERTY(VisibleAnywhere)
 		AgentState CurrentAgentState;
