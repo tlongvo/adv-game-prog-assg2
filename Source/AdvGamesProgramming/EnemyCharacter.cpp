@@ -154,6 +154,11 @@ void AEnemyCharacter::SensePlayer(AActor* ActorSensed, FAIStimulus Stimulus)
 	}
 }
 
+void AEnemyCharacter::OnHit()
+{
+
+}
+
 void AEnemyCharacter::MoveAlongPath()
 {
 	if (Path.Num() > 0 && Manager != NULL)

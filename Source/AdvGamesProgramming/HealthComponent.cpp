@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
+#include "EnemyCharacter.h"
 #include "HealthComponent.h"
 
 // Sets default values for this component's properties
@@ -35,6 +35,7 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 void UHealthComponent::OnTakeDamage(float Damage)
 {
+
 	CurrentHealth -= Damage;
 	if (CurrentHealth <= 0) 
 	{
