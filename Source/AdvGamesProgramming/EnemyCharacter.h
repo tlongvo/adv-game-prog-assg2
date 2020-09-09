@@ -67,6 +67,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void Fire(FVector FireDirection);
 
+	UFUNCTION(BlueprintCallable)
+	void OnHit();
+
 private:
 	void MoveAlongPath();
 	
