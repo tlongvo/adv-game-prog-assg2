@@ -42,7 +42,6 @@ public:
 	AAIManager* Manager;
 	UAIPerceptionComponent* PerceptionComponent; 
 	AActor* DetectedActor;
-	AActor* TeammateActor;
 	bool bCanSeeActor; 
 	bool bCanSeeTeammate;
 	bool bCanFollowTeammate; 
