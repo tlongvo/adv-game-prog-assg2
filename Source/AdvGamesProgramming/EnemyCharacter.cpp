@@ -110,10 +110,19 @@ void AEnemyCharacter::Tick(float DeltaTime)
 	{
 		AgentFollow();
 		//ALL: Reset Movement speed back to 600.0f;
-
+		//UE_LOG(LogTemp, Error, TEXT("FOLLOWING STATE"));
+		//If healthy & can see the Player and Teammate is recovered, change to ENGAGE
+		if (bCanSeeActor && HealthComponent->HealthPercentageRemaining() >= 0.4
+			&& TeammateHealthComponent->HealthPercentageRemaining() >= 0.4)
+		{
+			bCanFollowTeammate = false;
+			CurrentAgentState = AgentState::ENGAGE;
+			Path.Empty();
+			MovementComponent->MaxWalkSpeed = 600.0f;
+		}
 		//If teammate is recovered, change to PATROL
 		//Exclude: if can't see teammate; NOTE: It shouldn't lose sight while following teammate.
-		if((bCanSeeTeammate && TeammateHealthComponent->HealthPercentageRemaining() >= 0.4))
+		else if((bCanSeeTeammate && TeammateHealthComponent->HealthPercentageRemaining() >= 0.4))
 		{			
 			bCanFollowTeammate = false; 
 			CurrentAgentState = AgentState::PATROL;
@@ -127,15 +136,7 @@ void AEnemyCharacter::Tick(float DeltaTime)
 			Path.Empty();
 			MovementComponent->MaxWalkSpeed = 600.0f;
 		}
-		//If healthy & can see the Player and Teammate is recovered, change to ENGAGE
-		else if (bCanSeeActor && HealthComponent->HealthPercentageRemaining() >= 0.4 
-			&& TeammateHealthComponent->HealthPercentageRemaining() >= 0.4)
-		{
-			bCanFollowTeammate = false;
-			CurrentAgentState = AgentState::ENGAGE; 
-			Path.Empty();
-			MovementComponent->MaxWalkSpeed = 600.0f;
-		}
+		
 		MoveAlongPath();
 	}
 }
@@ -149,7 +150,6 @@ void AEnemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 void AEnemyCharacter::AgentPatrol() 
 {
-
 	if (Path.Num() == 0 && Manager != NULL)
 	{
 		Path = Manager->GeneratePath(CurrentNode, Manager->AllNodes[FMath::RandRange(0, Manager->AllNodes.Num() - 1)]);
