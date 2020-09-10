@@ -3,7 +3,6 @@
 #include "EnemyCharacter.h"
 #include "EngineUtils.h"
 
-
 // Sets default values
 AEnemyCharacter::AEnemyCharacter()
 {
@@ -56,6 +55,13 @@ void AEnemyCharacter::Tick(float DeltaTime)
 			CurrentAgentState = AgentState::FOLLOW;
 			Path.Empty();
 		}
+		//If can't see enemy but can see Teammate engaging with enemy, go to Teammate if >= 40% hp
+		else if (!bCanSeeActor && bCanSeeTeammate && TeammateCharacter->CurrentAgentState == AgentState::ENGAGE
+			&& HealthComponent->HealthPercentageRemaining() >= 0.4)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Helping Teammate"), *TeammateCharacter->GetName());
+			CurrentAgentState = AgentState::FOLLOW;
+		}
 		else if (bCanSeeActor && this->HealthComponent->HealthPercentageRemaining() < 0.4)
 		{
 			CurrentAgentState = AgentState::EVADE;
@@ -73,7 +79,8 @@ void AEnemyCharacter::Tick(float DeltaTime)
 			CurrentAgentState = AgentState::PATROL;
 		}
 		//If enemy sees teammate less than 40% hp, and itself is healthy, follow teammate 
-		else if (bCanSeeTeammate && TeammateHealthComponent->HealthPercentageRemaining() < 0.4 && HealthComponent->HealthPercentageRemaining() >= 0.4) 
+		else if (bCanSeeTeammate && TeammateHealthComponent->HealthPercentageRemaining() < 0.4 
+			&& HealthComponent->HealthPercentageRemaining() >= 0.4)
 		{
 			bCanFollowTeammate = true; 
 			CurrentAgentState = AgentState::FOLLOW;
@@ -184,6 +191,7 @@ void AEnemyCharacter::AgentEvade()
 void AEnemyCharacter::AgentFollow() 
 {
 	//UE_LOG(LogTemp, Log, TEXT("FOLLOW FUNCTION EXECUTED, %s"), bCanSeeTeammate ? TEXT("true") : TEXT("false"));
+	//If allowed to keep following
 	if (bCanFollowTeammate)
 	{	
 		//Increase movement speed to keep up with injured teammate.
@@ -199,12 +207,20 @@ void AEnemyCharacter::AgentFollow()
 		//If Enemy has no path, Generate a path nearest to teammate.
 		if (Path.Num() == 0 && Manager != NULL && TeammateActor != NULL)
 		{
-
 			ANavigationNode* Nearest = Manager->FindNearestNode(TeammateActor->GetActorLocation());
 			Path = Manager->GeneratePath(CurrentNode, Nearest);
 		} 
 	} 
-	//Else if not following teammate, reset Movement Speed. Need Testing. 
+	//Else if not allowed to follow, go to Teammate's location once. 
+	else if(!bCanFollowTeammate)
+	{
+		//If Enemy has no path, Generate a path nearest to teammate.
+		if (Path.Num() == 0 && Manager != NULL && TeammateActor != NULL)
+		{
+			ANavigationNode* Nearest = Manager->FindNearestNode(TeammateActor->GetActorLocation());
+			Path = Manager->GeneratePath(CurrentNode, Nearest);
+		}
+	}
 }
 
 void AEnemyCharacter::SensePlayer(AActor* ActorSensed, FAIStimulus Stimulus)
@@ -216,6 +232,8 @@ void AEnemyCharacter::SensePlayer(AActor* ActorSensed, FAIStimulus Stimulus)
 		{
 			TeammateActor = ActorSensed;
 			bCanSeeTeammate = true;
+			TeammateCharacter = Cast<AEnemyCharacter>(TeammateActor);
+			
 			//Get Teammate's Health Information
 			TeammateHealthComponent = TeammateActor->FindComponentByClass<UHealthComponent>();
 			UE_LOG(LogTemp, Warning, TEXT("ENEMY Detected: %s"), *TeammateActor->GetName());

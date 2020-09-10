@@ -49,6 +49,7 @@ public:
 	UHealthComponent* HealthComponent;
 	UHealthComponent* TeammateHealthComponent; 
 	UCharacterMovementComponent* MovementComponent; 
+	AEnemyCharacter* TeammateCharacter; 
 
 	UPROPERTY(VisibleAnywhere)
 		AgentState CurrentAgentState;
