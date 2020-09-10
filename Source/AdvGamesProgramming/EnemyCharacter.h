@@ -42,13 +42,13 @@ public:
 	AAIManager* Manager;
 	UAIPerceptionComponent* PerceptionComponent; 
 	AActor* DetectedActor;
-	AActor* TeammateActor;
 	bool bCanSeeActor; 
 	bool bCanSeeTeammate;
 	bool bCanFollowTeammate; 
 	UHealthComponent* HealthComponent;
 	UHealthComponent* TeammateHealthComponent; 
 	UCharacterMovementComponent* MovementComponent; 
+	AEnemyCharacter* TeammateCharacter; 
 
 	UPROPERTY(VisibleAnywhere)
 		AgentState CurrentAgentState;
