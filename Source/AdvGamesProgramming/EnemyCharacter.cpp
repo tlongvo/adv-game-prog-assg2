@@ -320,7 +320,7 @@ void AEnemyCharacter::Strafe(FVector StartingPoint)
 		AddMovementInput(Direction, 1.0f);
 	}
 
-	if (bCanSeeActor) // Turn to the player while strafing if visible
+	if (bCanSeeActor && this->HealthComponent->HealthPercentageRemaining() >= 0.4) // Turn to the player while strafing if visible and health is over 40%
 	{
 		FVector DirectionToTarget = DetectedActor->GetActorLocation() - GetActorLocation();
 		Fire(DirectionToTarget);
@@ -332,13 +332,13 @@ void AEnemyCharacter::Strafe(FVector StartingPoint)
 		//FaceDirection.Yaw -= 90.0f;
 		SetActorRotation(FaceDirection);
 	}
-	else
+	else //Stop dodging
 	{
 		if (CrouchProp != NULL)
 		{
 			CrouchProp->SetPropertyValue_InContainer(AnimInst, false); // Stop crouching
 		}
-		CurrentAgentState = AgentState::PATROL;
+		CurrentAgentState = AgentState::ENGAGE;
 	}
 }
 
