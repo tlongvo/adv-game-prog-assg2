@@ -17,7 +17,8 @@ enum class AgentState : uint8
 	PATROL,
 	ENGAGE,
 	EVADE,
-	FOLLOW
+	FOLLOW,
+	DODGE
 };
 
 UCLASS()
@@ -53,6 +54,13 @@ public:
 	UPROPERTY(VisibleAnywhere)
 		AgentState CurrentAgentState;
 
+	FVector StrafeStartingPoint;
+	bool goingToStart;
+	FVector RandomLocation;
+	USkeletalMeshComponent* EnemyMesh;
+	UAnimInstance* AnimInst;
+	UBoolProperty* CrouchProp;
+
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
@@ -69,6 +77,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void OnHit();
+
+	void Strafe(FVector StartingPoint);
 
 private:
 	void MoveAlongPath();

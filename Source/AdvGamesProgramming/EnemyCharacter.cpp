@@ -28,7 +28,17 @@ void AEnemyCharacter::BeginPlay()
 	bCanSeeTeammate = false; 
 	TeammateCharacter = nullptr; 
 	HealthComponent = FindComponentByClass<UHealthComponent>();
-	MovementComponent = FindComponentByClass<UCharacterMovementComponent>(); 
+	MovementComponent = FindComponentByClass<UCharacterMovementComponent>();
+
+	StrafeStartingPoint = GetActorLocation();
+
+
+	EnemyMesh = GetMesh();
+	
+	AnimInst = EnemyMesh->GetAnimInstance();
+		
+	CrouchProp = FindField<UBoolProperty>(AnimInst->GetClass(), "Crouching");
+
 }
 
 // Called every frame
@@ -136,7 +146,15 @@ void AEnemyCharacter::Tick(float DeltaTime)
 			Path.Empty();
 			MovementComponent->MaxWalkSpeed = 600.0f;
 		}
-		
+
+	}
+
+	if (CurrentAgentState == AgentState::DODGE)
+	{
+		Strafe(StrafeStartingPoint);
+	}
+	else
+	{
 		MoveAlongPath();
 	}
 }
@@ -252,7 +270,76 @@ void AEnemyCharacter::SensePlayer(AActor* ActorSensed, FAIStimulus Stimulus)
 
 void AEnemyCharacter::OnHit()
 {
+	UE_LOG(LogTemp, Warning, TEXT("ENEMY IS DODGE MODE"));
+	StrafeStartingPoint = GetActorLocation();
+	CurrentAgentState = AgentState::DODGE;
+}
 
+void AEnemyCharacter::Strafe(FVector StartingPoint)
+{
+	FVector Distance = (GetActorLocation() - StartingPoint);
+
+	if (Distance.Size() > 50.0f) // If out of bounds, return to start
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ENEMY IS RETURNING TO START"));
+		goingToStart = true;
+		MovementComponent->UnCrouch();
+
+		if (CrouchProp != NULL)
+		{
+			CrouchProp->SetPropertyValue_InContainer(AnimInst, false);
+		}
+	}
+	else if (Distance.IsNearlyZero(10.0f)) // If at start, get new random location to strafe to 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ENEMY IS DODGING, %f away from starting point"), Distance.Size());
+		goingToStart = false;
+		RandomLocation = FVector::FVector(GetActorLocation().X + FMath::RandRange(-500.0f, 500.0f), GetActorLocation().Y + FMath::RandRange(-500.0f, 500.0f), GetActorLocation().Z);
+		MovementComponent->Crouch();
+
+		if (CrouchProp != NULL)
+		{
+			CrouchProp->SetPropertyValue_InContainer(AnimInst, true);
+		}
+	}
+
+	if (goingToStart == true) // Return to the start
+	{
+		FVector Direction = StartingPoint - GetActorLocation();
+		UE_LOG(LogTemp, Warning, TEXT("ENEMY IS GOING TO START"));
+
+		Direction.Normalize();
+		AddMovementInput(Direction, 1.0f);
+	}
+	else if (goingToStart == false) // Strafe to direction
+	{
+		FVector Direction = RandomLocation - GetActorLocation();
+		UE_LOG(LogTemp, Warning, TEXT("ENEMY IS GOING TO %s"), *RandomLocation.ToString());
+
+		Direction.Normalize();
+		AddMovementInput(Direction, 1.0f);
+	}
+
+	if (bCanSeeActor) // Turn to the player while strafing if visible
+	{
+		FVector DirectionToTarget = DetectedActor->GetActorLocation() - GetActorLocation();
+		Fire(DirectionToTarget);
+
+		//Get the AI to face in the direction of travel.
+		FRotator FaceDirection = DirectionToTarget.ToOrientationRotator();
+		FaceDirection.Roll = 0.f;
+		FaceDirection.Pitch = 0.f;
+		//FaceDirection.Yaw -= 90.0f;
+		SetActorRotation(FaceDirection);
+	}
+	else
+	{
+		if (CrouchProp != NULL)
+		{
+			CrouchProp->SetPropertyValue_InContainer(AnimInst, false); // Stop crouching
+		}
+		CurrentAgentState = AgentState::PATROL;
+	}
 }
 
 void AEnemyCharacter::MoveAlongPath()
