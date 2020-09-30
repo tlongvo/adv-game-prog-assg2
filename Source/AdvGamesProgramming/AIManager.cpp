@@ -13,6 +13,7 @@ AAIManager::AAIManager()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	AllowedAngle = 0.4f; 
 }
 
 // Called when the game starts or when spawned
@@ -112,10 +113,133 @@ void AAIManager::CreateAgents()
 	}
 }
 
+void AAIManager::GenerateNodes(const TArray<FVector>& Vertices, int32 Width, int32 Height)
+{
+	AllNodes.Empty();
+
+	for (TActorIterator<ANavigationNode> It(GetWorld()); It; ++It)
+	{
+		It->Destroy();
+	}
+
+	for (int32 Row = 0; Row < Height; Row++)
+	{
+		for (int32 Col = 0; Col < Width; Col++)
+		{
+			//Create and add the nodes to the AllNodes array.
+			AllNodes.Add(GetWorld()->SpawnActor<ANavigationNode>(Vertices[Row * Width + Col], FRotator::ZeroRotator, FActorSpawnParameters()));
+		}
+	}
+
+	for (int32 Row = 0; Row < Height; Row++)
+	{
+		for (int32 Col = 0; Col < Width; Col++)
+		{
+			//Add the connections.
+
+			// CORNER CASES:
+			if (Row == 0 && Col == 0)
+			{
+				//   - Bottom Corner where Row = 0 and Col = 0
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row + 1) * Width + Col]);
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row + 1) * Width + (Col + 1)]);
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[Row * Width + (Col + 1)]);
+			}
+			else if (Row == 0 && Col == Width - 1)
+			{
+				//   - Bottom Corner where Row = 0 and Col = Width - 1
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row + 1) * Width + Col]);
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row + 1) * Width + (Col - 1)]);
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[Row * Width + (Col - 1)]);
+			}
+			else if (Row == Height - 1 && Col == 0)
+			{
+				//   - Top Corner where Row = Height - 1 and Col = 0
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row - 1) * Width + Col]);
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row - 1) * Width + (Col + 1)]);
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[Row * Width + (Col + 1)]);
+			}
+			else if (Row == Height - 1 && Col == Width - 1)
+			{
+				//   - Top Corner where Row = Height - 1 and Col = Width - 1
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row - 1) * Width + Col]);
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row - 1) * Width + (Col - 1)]);
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[Row * Width + (Col - 1)]);
+			}
+			// EDGE CASES:
+			else if (Col == 0)
+			{
+				//   - Left Edge where Col = 0
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row + 1) * Width + Col]);
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row + 1) * Width + (Col + 1)]);
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[Row * Width + (Col + 1)]);
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row - 1) * Width + Col]);
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row - 1) * Width + (Col + 1)]);
+			}
+			else if (Row == Height - 1)
+			{
+				//   - Top Edge where Row = Height - 1
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[Row * Width + (Col - 1)]);
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[Row * Width + (Col + 1)]);
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row - 1) * Width + (Col - 1)]);
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row - 1) * Width + Col]);
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row - 1) * Width + (Col + 1)]);
+			}
+			else if (Col == Width - 1)
+			{
+				//   - Right Edge where Col = Width - 1
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row + 1) * Width + Col]);
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row + 1) * Width + (Col - 1)]);
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[Row * Width + (Col - 1)]);
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row - 1) * Width + Col]);
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row - 1) * Width + (Col - 1)]);
+			}
+			else if (Row == 0)
+			{
+				//   - Bottom Edge where Row = 0
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[Row * Width + (Col - 1)]);
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[Row * Width + (Col + 1)]);
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row + 1) * Width + (Col - 1)]);
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row + 1) * Width + Col]);
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row + 1) * Width + (Col + 1)]);
+			}
+			// NORMAL CASES
+			else
+			{
+				//Connect Top Left
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row + 1) * Width + (Col - 1)]);
+				//Connect Top
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row + 1) * Width + Col]);
+				//Connect Top Right
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row + 1) * Width + (Col + 1)]);
+				//Connect Middle Left
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[Row * Width + (Col - 1)]);
+				//Connect Middle Right
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[Row * Width + (Col + 1)]);
+				//Connect Bottom Left
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row - 1) * Width + (Col - 1)]);
+				//Connect Bottom Middle
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row - 1) * Width + Col]);
+				//Connect Bottom Right
+				AddConnection(AllNodes[Row * Width + Col], AllNodes[(Row - 1) * Width + (Col + 1)]);
+			}
+		}
+	}
+}
+
+void AAIManager::AddConnection(ANavigationNode* FromNode, ANavigationNode* ToNode)
+{
+	FVector Direction = FromNode->GetActorLocation() - ToNode->GetActorLocation();
+	Direction.Normalize();
+	if (Direction.Z < AllowedAngle && Direction.Z > AllowedAngle * -1.0f)
+	{
+		FromNode->ConnectedNodes.Add(ToNode);
+	}
+
+}
+
 //Finds nearest nodes by checking the distance between all nodes
 //And choosing the one that is the closest
-//An issue is that it is looping through all nodes
-//And if the game is large with many nodes, it could be performance heavy.
 ANavigationNode* AAIManager::FindNearestNode(const FVector& Location)
 {
 	ANavigationNode* NearestNode = nullptr;

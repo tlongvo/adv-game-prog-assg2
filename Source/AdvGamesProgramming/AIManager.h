@@ -53,4 +53,8 @@ public:
 	void PopulateNodes();
 	void CreateAgents();
 
+	void GenerateNodes(const TArray<FVector>& Vertices, int32 Width, int32 Height);
+	void AddConnection(ANavigationNode* FromNode, ANavigationNode* ToNode);
+	UPROPERTY(EditAnywhere)
+	float AllowedAngle;
 };
