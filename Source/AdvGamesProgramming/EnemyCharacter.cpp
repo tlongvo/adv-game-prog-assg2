@@ -39,6 +39,9 @@ void AEnemyCharacter::BeginPlay()
 		
 	CrouchProp = FindField<UBoolProperty>(AnimInst->GetClass(), "Crouching");
 
+
+	PathfindingNodeAccuracy = 100.0f;
+
 }
 
 // Called every frame
@@ -348,7 +351,7 @@ void AEnemyCharacter::MoveAlongPath()
 	{
 		//UE_LOG(LogTemp, Display, TEXT("Current Node: %s"), *CurrentNode->GetName())
 		//If Character has reached one of the nodes along the path.
-		if ((GetActorLocation() - CurrentNode->GetActorLocation()).IsNearlyZero(100.0f))
+		if ((GetActorLocation() - CurrentNode->GetActorLocation()).IsNearlyZero(PathfindingNodeAccuracy))
 		{
 			UE_LOG(LogTemp, Display, TEXT("Currently At Node %s"), *CurrentNode->GetName())
 				CurrentNode = Path.Pop();
