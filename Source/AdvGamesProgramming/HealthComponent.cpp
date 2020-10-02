@@ -60,3 +60,8 @@ float UHealthComponent::HealthPercentageRemaining()
 {
 	return CurrentHealth / MaxHealth; 
 }
+
+void UHealthComponent::OnTouchHealthBoost(int32 HealthAmount)
+{
+	CurrentHealth += HealthAmount; 
+}
