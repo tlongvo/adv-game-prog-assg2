@@ -3,15 +3,27 @@
 
 #include "MysteryBoxPickup.h"
 #include "PlayerCharacter.h"
+#include "WeaponPickup.h"
+#include "Components/StaticMeshComponent.h"
 #include "HealthComponent.h"
 
-void AMysteryBoxPickup::OnGenerate()
+AMysteryBoxPickup::AMysteryBoxPickup()
+{
+	//WeaponMaterial = CreateDefaultSubobject<UMaterial>(TEXT("WeaponMaterial"));
+	//HealthMaterial = CreateDefaultSubobject<UMaterial>(TEXT("HealthMaterial"));
+}
+
+void AMysteryBoxPickup::OnGenerate() //Remember to call function in Blueprint
 {
 	Super::OnGenerate();
-	//Remember to call function in BluePrint 
+	
+	//Goal
+	//Maybe here choose what type of pickup it will be
+	//Variation in shape, model, etc. 
 	int32 RandomInt = FMath::RandRange(1, 100);
 	HealthAmount = RandomInt; 
 
+	MeshComponent = FindComponentByClass<UStaticMeshComponent>();
 	//Here Can Generate Stats / Characteristics
 	//In BluePrint can set materials
 }
@@ -20,18 +32,41 @@ void AMysteryBoxPickup::OnGenerate()
 void AMysteryBoxPickup::OnPickup(AActor* ActorThatPickedUp)
 {
 	//Call Pickup class's OnPickup function
-	//Super::OnPickup(ActorThatPickedUp);
+	Super::OnPickup(ActorThatPickedUp);
+	
+	
+	int32 RandomPercentageNumber = FMath::RandRange(1, 100);
+	//FVector OldLocation = GetActorLocation();
+	
+	if (RandomPercentageNumber <= 50)
+	{
+		//Health Portion
+		//There no Health deduction against Player only enemy
+		//Cast Actor to PlayerCharacter
+		APlayerCharacter* PlayerThatPickedUp = Cast<APlayerCharacter>(ActorThatPickedUp);
+		if (PlayerThatPickedUp) {
+			//Access Health Component
+			UHealthComponent* Health = PlayerThatPickedUp->FindComponentByClass<UHealthComponent>();
+			if (Health && HealthMaterial)
+			{
+				MeshComponent->SetMaterial(0, HealthMaterial); 
+				Health->OnTouchHealthBoost(HealthAmount);
+			}
+		}
+	}
+	else if (RandomPercentageNumber <= 100)
+	{
+		if (MeshComponent && WeaponMaterial)
+		{
+			MeshComponent->SetMaterial(0, WeaponMaterial);			
+		}
+		//MysteryBox Pickup
+		AWeaponPickup* WeaponPickup = GetWorld()->SpawnActor<AWeaponPickup>(WeaponPickupClass, this->GetActorLocation(), FRotator::ZeroRotator);
+		UE_LOG(LogTemp, Warning, TEXT("WeaponPickup Spawned from MysteryBox"));
+		
 
-	//Health Portion
-	//There no Health deduction against Player only enemy
-	//Cast Actor to PlayerCharacter
-	APlayerCharacter* PlayerThatPickedUp = Cast<APlayerCharacter>(ActorThatPickedUp);
-	//Access Health Component
-	UHealthComponent* Health = PlayerThatPickedUp->FindComponentByClass<UHealthComponent>(); 
-	Health->OnTouchHealthBoost(HealthAmount);
-	this->Destroy();
-	
-	
+	}
+	this->SetLifeSpan(5.0f);
 
 	//In WeaponPickup, this function sets the Player's gun stats equal to the PickUp Stats. 
 	//Goals:

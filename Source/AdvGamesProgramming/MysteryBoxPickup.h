@@ -15,14 +15,32 @@ class ADVGAMESPROGRAMMING_API AMysteryBoxPickup : public APickup
 	GENERATED_BODY()
 
 public:
+	AMysteryBoxPickup();
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	int32 HealthAmount; 
+
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* MeshComponent;
+
+	UPROPERTY(EditAnywhere)
+	UMaterial* HealthMaterial;
+
+	UPROPERTY(EditAnywhere)
+	UMaterial* WeaponMaterial;
+
+	UPROPERTY(EditAnywhere)
+	UMaterial* BoostMaterial;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<APickup> WeaponPickupClass;
+
 public:
 	
 	//Blueprint usuable is temporary
 	UFUNCTION(BlueprintCallable)
 		void OnGenerate() override;
-	//UFUNCTION(BlueprintImplementableEvent)
+	UFUNCTION(BlueprintCallable)
 		void OnPickup(AActor* ActorThatPickedUp) override;
 	
 	
