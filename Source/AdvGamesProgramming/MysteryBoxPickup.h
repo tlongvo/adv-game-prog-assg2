@@ -9,9 +9,14 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "MysteryBoxPickup.generated.h"
 
-/**
- * 
- */
+UENUM()
+enum class MysteryBoxPickupType : uint8
+{
+	HEALTH,
+	SPEED_BOOST,
+	WEAPON
+};
+
 UCLASS()
 class ADVGAMESPROGRAMMING_API AMysteryBoxPickup : public APickup
 {
@@ -25,6 +30,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere)
 	float SpeedMultiplier;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		MysteryBoxPickupType Type;
 
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* MeshComponent;
@@ -47,6 +55,8 @@ public:
 	FTimerHandle FirstHandle;
 	FTimerHandle SecondHandle;
 
+private:
+	int32 PickupTouchCount; 
 public:
 	
 	//Blueprint usuable is temporary

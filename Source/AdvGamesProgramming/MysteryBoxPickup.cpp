@@ -27,13 +27,36 @@ void AMysteryBoxPickup::OnGenerate() //Remember to call function in Blueprint
 	float RandomSpeedMultiplier = FMath::FRandRange(1.5, 5);
 	SpeedMultiplier = RandomSpeedMultiplier;
 
+	//Set amount of times Box has been touched to zero
+	PickupTouchCount = 0; 
+
 	MeshComponent = FindComponentByClass<UStaticMeshComponent>();
 	//Here Can Generate Stats / Characteristics
 	//In BluePrint can set material
+
+	//Select Box type
+	//Each type have about a 33% chance 
+	//Enum not really useful here, but more easier on readability
+	//Can just use OnPick to randomly assign type  
+
+	int32 RandomPercentageNumber = FMath::RandRange(1, 100);
+	if (RandomPercentageNumber <= 33)
+	{
+		Type = MysteryBoxPickupType::HEALTH;
+	}
+	else if (RandomPercentageNumber <= 66)
+	{
+		Type = MysteryBoxPickupType::SPEED_BOOST;
+	}
+	else if (RandomPercentageNumber <= 100)
+	{
+		Type = MysteryBoxPickupType::WEAPON;
+	}
 }
 
 void AMysteryBoxPickup::OnPickup(AActor* ActorThatPickedUp)
 {
+	//PLACE TO SET VARIABLES created in the OnGenerate() function
 	//Call Pickup class's OnPickup function
 	//Super::OnPickup(ActorThatPickedUp);
 
@@ -47,61 +70,68 @@ void AMysteryBoxPickup::OnPickup(AActor* ActorThatPickedUp)
 	//Initilise Variables associated with Actor that picked up the MysteryBox
 	PlayerThatPickedUp = Cast<APlayerCharacter>(ActorThatPickedUp);
 	MovementComponent = PlayerThatPickedUp->FindComponentByClass<UCharacterMovementComponent>();
-
-	//Randomised Selection of Mystery Box Item
-	int32 RandomPercentageNumber = FMath::RandRange(1, 100);
-	if (RandomPercentageNumber <= 10)
+	
+	//If MysteryBox has not been touched before
+	//Then proceed with it's effects
+	if (PickupTouchCount < 1)
 	{
-		//Health Portion
-		//Cast Actor to PlayerCharacter to attain its Class Object
-		if (PlayerThatPickedUp) {
-			//Access Health Component
-			UHealthComponent* Health = PlayerThatPickedUp->FindComponentByClass<UHealthComponent>();
-			if (Health && HealthMaterial)
-			{
-				//Change MysteryBox material to respective Health Material (Green)
-				//Execute Health Recovery function
-				MeshComponent->SetMaterial(0, HealthMaterial); 
-				Health->OnTouchHealthBoost(HealthAmount);
-			}
-		}
-	}
-	else if (RandomPercentageNumber <= 50)
-	{
-		if (MeshComponent && WeaponMaterial)
+		//Apply effect of selected box type
+		if (Type == MysteryBoxPickupType::HEALTH)
 		{
-			//Change MysteryBox to WeaponMaterial(Blue)
-			MeshComponent->SetMaterial(0, WeaponMaterial);			
-		}
-		//Spawn Pickup in front of Player
-		FVector Location = GetActorLocation();
-		FVector DirectionToTarget = ActorThatPickedUp->GetActorForwardVector();
-		Location += (DirectionToTarget * 150); 
-
-		//Spawn WeaponPickup 
-		APickup* WeaponPickup = GetWorld()->SpawnActor<APickup>(WeaponPickupClass, Location, FRotator::ZeroRotator);
-		UE_LOG(LogTemp, Warning, TEXT("WeaponPickup Spawned from MysteryBox"));
-	} else if (RandomPercentageNumber <= 100) //Speed boost
-	{
-		if (PlayerThatPickedUp) {
-			//Access Movement Component
-			if (MovementComponent && BoostMaterial)
-			{
-				//Change MysteryBox material to respective Health Material (Green)
-				//Execute Health Recovery function
-				MeshComponent->SetMaterial(0, BoostMaterial);
-
-				MovementComponent->MaxWalkSpeed *= 5; //PCG STAT?
-
-				//Remove Mysterbox - Move Box out of visible map after 1 second
-				GetWorld()->GetTimerManager().SetTimer(FirstHandle, this, &AMysteryBoxPickup::MoveBoxDown, 1.0f, false);
-				//Reset movement speed after 5 seconds
-				GetWorld()->GetTimerManager().SetTimer(SecondHandle, this, &AMysteryBoxPickup::ResetSpeed, 3.0f, false);
+			//Health Portion
+			//Cast Actor to PlayerCharacter to attain its Class Object
+			if (PlayerThatPickedUp) {
+				//Access Health Component
+				UHealthComponent* Health = PlayerThatPickedUp->FindComponentByClass<UHealthComponent>();
+				if (Health && HealthMaterial)
+				{
+					//Change MysteryBox material to respective Health Material (Green)
+					//Execute Health Recovery function
+					MeshComponent->SetMaterial(0, HealthMaterial);
+					Health->OnTouchHealthBoost(HealthAmount);
+					UE_LOG(LogTemp, Warning, TEXT("Health Recovered by: %i"), HealthAmount);
+				}
 			}
 		}
+		else if (Type == MysteryBoxPickupType::WEAPON)
+		{
+			if (MeshComponent && WeaponMaterial)
+			{
+				//Change MysteryBox to WeaponMaterial(Blue)
+				MeshComponent->SetMaterial(0, WeaponMaterial);
+			}
+			//Spawn Pickup in front of Player
+			FVector Location = GetActorLocation();
+			FVector DirectionToTarget = ActorThatPickedUp->GetActorForwardVector();
+			Location += (DirectionToTarget * 150);
+
+			//Spawn WeaponPickup 
+			APickup* WeaponPickup = GetWorld()->SpawnActor<APickup>(WeaponPickupClass, Location, FRotator::ZeroRotator);
+			UE_LOG(LogTemp, Warning, TEXT("WeaponPickup Spawned from MysteryBox"));
+		}
+		else if (Type == MysteryBoxPickupType::SPEED_BOOST)
+		{
+			if (PlayerThatPickedUp) {
+				//Access Movement Component
+				if (MovementComponent && BoostMaterial)
+				{
+					//Change MysteryBox material to respective Health Material (Green)
+					//Execute Health Recovery function
+					MeshComponent->SetMaterial(0, BoostMaterial);
+					MovementComponent->MaxWalkSpeed *= SpeedMultiplier;
+					UE_LOG(LogTemp, Warning, TEXT("Speed Boost by: %f"), SpeedMultiplier);
+
+					//Remove Mysterbox - Move Box out of visible map after 1 second
+					GetWorld()->GetTimerManager().SetTimer(FirstHandle, this, &AMysteryBoxPickup::MoveBoxDown, 1.0f, false);
+					//Reset movement speed after 5 seconds
+					GetWorld()->GetTimerManager().SetTimer(SecondHandle, this, &AMysteryBoxPickup::ResetSpeed, 3.0f, false);
+				}
+			}
+		}
+		//Destroy Object after specified time
+		this->SetLifeSpan(3.1f);
 	}
-	//Destroy Object after specified time
-	this->SetLifeSpan(3.1f);
+	PickupTouchCount++;
 } 
 
 void AMysteryBoxPickup::ResetSpeed()
@@ -109,7 +139,8 @@ void AMysteryBoxPickup::ResetSpeed()
 	if (MovementComponent)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Movement Component is NOT NULL"));
-		MovementComponent->MaxWalkSpeed = 600.0f;
+		//Divide by Speed Multiplier to get original movement speed
+		MovementComponent->MaxWalkSpeed /= SpeedMultiplier;
 	}
 }
 
