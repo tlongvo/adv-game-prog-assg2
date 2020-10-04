@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "MysteryBoxPickup.h"
 #include "PlayerCharacter.h"
-#include "WeaponPickup.h"
+#include "Pickup.h"
 #include "Components/StaticMeshComponent.h"
+#include "TimerManager.h" 
 #include "HealthComponent.h"
 
 AMysteryBoxPickup::AMysteryBoxPickup()
@@ -20,62 +20,104 @@ void AMysteryBoxPickup::OnGenerate() //Remember to call function in Blueprint
 	//Goal
 	//Maybe here choose what type of pickup it will be
 	//Variation in shape, model, etc. 
-	int32 RandomInt = FMath::RandRange(1, 100);
-	HealthAmount = RandomInt; 
+	int32 RandomHealth = FMath::RandRange(1, 100);
+	HealthAmount = RandomHealth; 
+
+	//Speed Mulitplier for Walk Speed
+	float RandomSpeedMultiplier = FMath::FRandRange(1.5, 5);
+	SpeedMultiplier = RandomSpeedMultiplier;
 
 	MeshComponent = FindComponentByClass<UStaticMeshComponent>();
 	//Here Can Generate Stats / Characteristics
-	//In BluePrint can set materials
+	//In BluePrint can set material
 }
-
 
 void AMysteryBoxPickup::OnPickup(AActor* ActorThatPickedUp)
 {
 	//Call Pickup class's OnPickup function
-	Super::OnPickup(ActorThatPickedUp);
-	
-	
-	int32 RandomPercentageNumber = FMath::RandRange(1, 100);
-	//FVector OldLocation = GetActorLocation();
-	
-	if (RandomPercentageNumber <= 50)
-	{
-		//Health Portion
-		//There no Health deduction against Player only enemy
-		//Cast Actor to PlayerCharacter
-		APlayerCharacter* PlayerThatPickedUp = Cast<APlayerCharacter>(ActorThatPickedUp);
-		if (PlayerThatPickedUp) {
-			//Access Health Component
-			UHealthComponent* Health = PlayerThatPickedUp->FindComponentByClass<UHealthComponent>();
-			if (Health && HealthMaterial)
-			{
-				MeshComponent->SetMaterial(0, HealthMaterial); 
-				Health->OnTouchHealthBoost(HealthAmount);
-			}
-		}
-	}
-	else if (RandomPercentageNumber <= 100)
-	{
-		if (MeshComponent && WeaponMaterial)
-		{
-			MeshComponent->SetMaterial(0, WeaponMaterial);			
-		}
-		//MysteryBox Pickup
-		AWeaponPickup* WeaponPickup = GetWorld()->SpawnActor<AWeaponPickup>(WeaponPickupClass, this->GetActorLocation(), FRotator::ZeroRotator);
-		UE_LOG(LogTemp, Warning, TEXT("WeaponPickup Spawned from MysteryBox"));
-		
-
-	}
-	this->SetLifeSpan(5.0f);
+	//Super::OnPickup(ActorThatPickedUp);
 
 	//In WeaponPickup, this function sets the Player's gun stats equal to the PickUp Stats. 
 	//Goals:
 	//1. Random choice of Speed Boost, HP Regen or Gun 
 	//If "Speed" --> Update Player's movement speed temporarily
 	//If "Health" --> Update Player's Health accordingly
-	//If "Gun" --> Update Player's Gun Stats 
-	//Gun -- Despawn Box and Generate Gun
+	//If "Gun" --> Produce a Weapon Pickup 
 
-	//For Now Create the Speed Boost
+	//Initilise Variables associated with Actor that picked up the MysteryBox
+	PlayerThatPickedUp = Cast<APlayerCharacter>(ActorThatPickedUp);
+	MovementComponent = PlayerThatPickedUp->FindComponentByClass<UCharacterMovementComponent>();
+
+	//Randomised Selection of Mystery Box Item
+	int32 RandomPercentageNumber = FMath::RandRange(1, 100);
+	if (RandomPercentageNumber <= 10)
+	{
+		//Health Portion
+		//Cast Actor to PlayerCharacter to attain its Class Object
+		if (PlayerThatPickedUp) {
+			//Access Health Component
+			UHealthComponent* Health = PlayerThatPickedUp->FindComponentByClass<UHealthComponent>();
+			if (Health && HealthMaterial)
+			{
+				//Change MysteryBox material to respective Health Material (Green)
+				//Execute Health Recovery function
+				MeshComponent->SetMaterial(0, HealthMaterial); 
+				Health->OnTouchHealthBoost(HealthAmount);
+			}
+		}
+	}
+	else if (RandomPercentageNumber <= 50)
+	{
+		if (MeshComponent && WeaponMaterial)
+		{
+			//Change MysteryBox to WeaponMaterial(Blue)
+			MeshComponent->SetMaterial(0, WeaponMaterial);			
+		}
+		//Spawn Pickup in front of Player
+		FVector Location = GetActorLocation();
+		FVector DirectionToTarget = ActorThatPickedUp->GetActorForwardVector();
+		Location += (DirectionToTarget * 150); 
+
+		//Spawn WeaponPickup 
+		APickup* WeaponPickup = GetWorld()->SpawnActor<APickup>(WeaponPickupClass, Location, FRotator::ZeroRotator);
+		UE_LOG(LogTemp, Warning, TEXT("WeaponPickup Spawned from MysteryBox"));
+	} else if (RandomPercentageNumber <= 100) //Speed boost
+	{
+		if (PlayerThatPickedUp) {
+			//Access Movement Component
+			if (MovementComponent && BoostMaterial)
+			{
+				//Change MysteryBox material to respective Health Material (Green)
+				//Execute Health Recovery function
+				MeshComponent->SetMaterial(0, BoostMaterial);
+
+				MovementComponent->MaxWalkSpeed *= 5; //PCG STAT?
+
+				//Remove Mysterbox - Move Box out of visible map after 1 second
+				GetWorld()->GetTimerManager().SetTimer(FirstHandle, this, &AMysteryBoxPickup::MoveBoxDown, 1.0f, false);
+				//Reset movement speed after 5 seconds
+				GetWorld()->GetTimerManager().SetTimer(SecondHandle, this, &AMysteryBoxPickup::ResetSpeed, 3.0f, false);
+			}
+		}
+	}
+	//Destroy Object after specified time
+	this->SetLifeSpan(3.1f);
 } 
+
+void AMysteryBoxPickup::ResetSpeed()
+{
+	if (MovementComponent)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Movement Component is NOT NULL"));
+		MovementComponent->MaxWalkSpeed = 600.0f;
+	}
+}
+
+void AMysteryBoxPickup::MoveBoxDown()
+{
+	//Grab Actor location and move down along the z axis
+	FVector NewLocation = GetActorLocation();
+	NewLocation.Z *= -5;
+	SetActorLocation(NewLocation);
+}
 

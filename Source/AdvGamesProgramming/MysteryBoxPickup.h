@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Pickup.h"
+#include "WeaponPickup.h"
+#include "PlayerCharacter.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "MysteryBoxPickup.generated.h"
 
 /**
@@ -21,6 +24,9 @@ public:
 	int32 HealthAmount; 
 
 	UPROPERTY(VisibleAnywhere)
+	float SpeedMultiplier;
+
+	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* MeshComponent;
 
 	UPROPERTY(EditAnywhere)
@@ -34,6 +40,12 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<APickup> WeaponPickupClass;
+	
+	APlayerCharacter* PlayerThatPickedUp;
+	UCharacterMovementComponent* MovementComponent;
+
+	FTimerHandle FirstHandle;
+	FTimerHandle SecondHandle;
 
 public:
 	
@@ -42,6 +54,10 @@ public:
 		void OnGenerate() override;
 	UFUNCTION(BlueprintCallable)
 		void OnPickup(AActor* ActorThatPickedUp) override;
-	
-	
+
+	UFUNCTION()
+	void ResetSpeed();
+
+	UFUNCTION()
+		void MoveBoxDown();
 };
