@@ -7,6 +7,7 @@
 #include "WeaponPickup.h"
 #include "PlayerCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "HealthComponent.h"
 #include "MysteryBoxPickup.generated.h"
 
 UENUM()
@@ -51,6 +52,7 @@ public:
 	
 	APlayerCharacter* PlayerThatPickedUp;
 	UCharacterMovementComponent* MovementComponent;
+	UHealthComponent* HealthComponent;
 
 	FTimerHandle FirstHandle;
 	FTimerHandle SecondHandle;
