@@ -48,8 +48,9 @@ public:
 	UMaterial* BoostMaterial;
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<APickup> WeaponPickupClass;
+	TSubclassOf<AWeaponPickup> WeaponPickupClass;
 	
+	AWeaponPickup* WeaponPickup;
 	APlayerCharacter* PlayerThatPickedUp;
 	UCharacterMovementComponent* MovementComponent;
 	UHealthComponent* HealthComponent;

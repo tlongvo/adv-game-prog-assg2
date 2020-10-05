@@ -31,8 +31,8 @@ void AMysteryBoxPickup::OnGenerate() //Remember to call function in Blueprint
 	PickupTouchCount = 0; 
 
 	MeshComponent = FindComponentByClass<UStaticMeshComponent>();
+
 	//Here Can Generate Stats / Characteristics
-	//In BluePrint can set material
 
 	//Select Box type
 	//Each type have about a 33% chance 
@@ -109,7 +109,7 @@ void AMysteryBoxPickup::OnPickup(AActor* ActorThatPickedUp)
 				Location += (DirectionToTarget * 150);
 
 				//Spawn WeaponPickup 
-				APickup* WeaponPickup = GetWorld()->SpawnActor<APickup>(WeaponPickupClass, Location, FRotator::ZeroRotator);
+				WeaponPickup = GetWorld()->SpawnActor<AWeaponPickup>(WeaponPickupClass, Location, FRotator::ZeroRotator);
 				UE_LOG(LogTemp, Warning, TEXT("WeaponPickup Spawned from MysteryBox"));
 			}
 			else if (Type == MysteryBoxPickupType::SPEED_BOOST)
