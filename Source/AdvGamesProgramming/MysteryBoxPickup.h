@@ -36,32 +36,36 @@ public:
 	UPROPERTY(EditAnywhere)
 		TSubclassOf<AWeaponPickup> WeaponPickupClass;
 
+	MysteryBoxPickupType Type; 
+
 	//Movement Speed Variables
-	float BaseSpeedMultiplier;
-	float SpeedMultiplier;
 	UPROPERTY(EditAnywhere)
 		float MaxSpeedMultiplier;
+	float BaseSpeedMultiplier;
+	float SpeedMultiplier;
+	
 
 	//Health
-	int32 HealthAmount;
+	float HealthAmount;
 	UHealthComponent* HealthComponent;
 
-	MysteryBoxPickupType Type;
+	//Utility variables
 	UStaticMeshComponent* MeshComponent;
-	AWeaponPickup* WeaponPickup;
 	APlayerCharacter* PlayerThatPickedUp;
 	UCharacterMovementComponent* MovementComponent;
+	AWeaponPickup* WeaponPickup;
 	
 	
 private:
-	int32 PickupTouchCount; 
-	FTimerHandle FirstHandle;
-	FTimerHandle SecondHandle;
+	bool bHasBeenTouched; //Check if OnPickup() has been executed once
+	FTimerHandle FirstHandle; //Handle for MoveBoxDown()
+	FTimerHandle SecondHandle; //Handle for ResetSpeed() 
 public:
 	
-	//Blueprint usuable is temporary
 	UFUNCTION(BlueprintCallable)
-		void OnGenerate() override;
+		void OnGenerate() override; //Generate "Type" of Effect
+
+	//Create and execute functionality of chosen "Type"
 	UFUNCTION(BlueprintCallable)
 		void OnPickup(AActor* ActorThatPickedUp) override;
 
@@ -71,9 +75,16 @@ public:
 	UFUNCTION()
 		void MoveBoxDown();
 
-	/** Generate a value for "HealthAmount" based on PlayerCharacter Current Health
+	/** Generate a value for "HealthAmount" based on PlayerCharacter Health
 	* @param PlayerHealthComponent: Health component attached to the Player
 	*/
-	void GenerateHealthAmount(UHealthComponent* PlayerHealthComponent);
+	void GenerateAndSetHealthAmount(UHealthComponent* PlayerHealthComponent);
+
+	/** Generate a value for "SpeedMultiplier" based on PlayerCharacter Health
+	* @param PlayerHealthComponent: Health component attached to the Player
+	* @param PlayerMovementComponent: Character Movement component 
+	*/
+	void GenerateAndSetSpeedMultiplier(UHealthComponent* PlayerHealthComponent,
+		UCharacterMovementComponent* PlayerMovementComponent);
 
 };

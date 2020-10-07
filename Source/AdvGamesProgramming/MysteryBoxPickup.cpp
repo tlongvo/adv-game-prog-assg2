@@ -2,7 +2,6 @@
 
 #include "MysteryBoxPickup.h"
 #include "PlayerCharacter.h"
-#include "Pickup.h"
 #include "Components/StaticMeshComponent.h"
 #include "TimerManager.h" 
 
@@ -11,33 +10,27 @@ AMysteryBoxPickup::AMysteryBoxPickup()
 {
 	//WeaponMaterial = CreateDefaultSubobject<UMaterial>(TEXT("WeaponMaterial"));
 	//HealthMaterial = CreateDefaultSubobject<UMaterial>(TEXT("HealthMaterial"));
+	//BoostMaterial = CreateDefaultSubobject<UMaterial>(TEXT("BoostMaterial"));
 }
 
-void AMysteryBoxPickup::OnGenerate() //Remember to call function in Blueprint
+void AMysteryBoxPickup::OnGenerate() //Call in Blueprint to execute
 {
 	Super::OnGenerate();
-	
 	//Goal: Determine the "Type" of the Mystery Box
-
-	//Initialise Health stats
-	//int32 RandomHealth = FMath::RandRange(1, 100);
-	//HealthAmount = RandomHealth; 
-	//HealEffectiveness = 0.5; //Recover 50% of missing hp  
-
 
 	//Set Default MaxSpeedMultiplier
 	BaseSpeedMultiplier = 0.2f; //Offset to prevent Multplier equating to 1
 	MaxSpeedMultiplier = 5.0f; 
 
-	//Set amount of times Box has been touched to zero
-	PickupTouchCount = 0; 
+	bHasBeenTouched = false; 
+	HealthAmount = 0;
 
 	//Initilise Mesh component
 	MeshComponent = FindComponentByClass<UStaticMeshComponent>();
 
-	//Randomly select Box type
-	//Each type have about a 33% chance 
+	//Randomly select Box type (33% chance per type)
 	int32 RandomPercentageNumber = FMath::RandRange(1, 100);
+
 	if (RandomPercentageNumber <= 33)
 	{
 		Type = MysteryBoxPickupType::HEALTH;
@@ -52,27 +45,24 @@ void AMysteryBoxPickup::OnGenerate() //Remember to call function in Blueprint
 	}
 }
 
-void AMysteryBoxPickup::OnPickup(AActor* ActorThatPickedUp)
+void AMysteryBoxPickup::OnPickup(AActor* ActorThatPickedUp) //Generates stats/effects for the chosen "Type"
 {
-	//Generates stats/effects for the chosen "Type"
-
-	//Call Pickup class's OnPickup function
 	Super::OnPickup(ActorThatPickedUp);
-
-	//Description of each Type effect
-	//If "Speed" --> Update Player's movement speed temporarily
-	//If "Health" --> Update Player's Health 
-	//If "Gun" --> Produce a Weapon Pickup 
+	/**Description of each "Type" functionality
+	* If "Speed" --> Increase Player's movement speed temporarily
+	* If "Health" --> Recover Player's health 
+	* If "Gun" --> Produce a Weapon pickup 
+	*/
 	if (ActorThatPickedUp->GetClass()->GetName() == FString("PlayerCharacterBlueprint_C"))
 	{
 		//Initilise Variables associated with Actor that picked up the MysteryBox
-		//Cast Actor to PlayerCharacter to attain its Class Object
+		//Cast Actor to PlayerCharacter to attain a PlayerCharacter type pointer
 		PlayerThatPickedUp = Cast<APlayerCharacter>(ActorThatPickedUp);
 		MovementComponent = PlayerThatPickedUp->FindComponentByClass<UCharacterMovementComponent>();
 		HealthComponent = PlayerThatPickedUp->FindComponentByClass<UHealthComponent>();
 
-		//If MysteryBox has not been touched before then proceed
-		if (PickupTouchCount < 1)
+		//If MysteryBox has not been touched
+		if (!bHasBeenTouched)
 		{
 			//Apply effect of selected box type
 			if (Type == MysteryBoxPickupType::HEALTH)
@@ -84,10 +74,8 @@ void AMysteryBoxPickup::OnPickup(AActor* ActorThatPickedUp)
 						//Change MysteryBox material to respective Health Material (Green)
 						//Execute Health Recovery function
 						MeshComponent->SetMaterial(0, HealthMaterial);
-						//Generate Health amount
-						GenerateHealthAmount(HealthComponent);
-						HealthComponent->OnTouchHealthBoost(HealthAmount);
-						UE_LOG(LogTemp, Warning, TEXT("Health Recovered by: %i"), HealthAmount);
+						//Generate Health amount and update Player Health
+						GenerateAndSetHealthAmount(HealthComponent);	
 					}
 				}
 			}
@@ -112,17 +100,12 @@ void AMysteryBoxPickup::OnPickup(AActor* ActorThatPickedUp)
 				if (PlayerThatPickedUp) {
 					//Access Movement Component
 					if (MovementComponent && BoostMaterial)
-					{
+					{	
+						//Generate Speed Multiplier value and update Player Movement Speed
+						GenerateAndSetSpeedMultiplier(HealthComponent, MovementComponent);
+
 						//Change MysteryBox material to respective Speed Material (Yellow)
 						MeshComponent->SetMaterial(0, BoostMaterial);
-
-						//Update Speed based on Health
-						float HealthPercentageMissing = 1 - HealthComponent->HealthPercentageRemaining();
-						//Exponentially increase Movement Speed based on Missing Health
-						//Base Multiplier to prevent SpeedMultiplier equating to 1
-						SpeedMultiplier = BaseSpeedMultiplier + FMath::Pow(MaxSpeedMultiplier, HealthPercentageMissing);
-						MovementComponent->MaxWalkSpeed *= SpeedMultiplier;
-						UE_LOG(LogTemp, Warning, TEXT("Speed Boost by: %f"), SpeedMultiplier);
 
 						//Remove Mystery Box - Move Box out of visible map after 1 second
 						GetWorld()->GetTimerManager().SetTimer(FirstHandle, this, &AMysteryBoxPickup::MoveBoxDown, 1.0f, false);
@@ -134,9 +117,10 @@ void AMysteryBoxPickup::OnPickup(AActor* ActorThatPickedUp)
 			//Destroy Object after specified time
 			//Needs to be higher than Timer, otherwise Timer won't work (access errors)
 			this->SetLifeSpan(3.1f);
+
+			bHasBeenTouched = true;
 		}
-		//Increase touch count after the check has been executed. 
-		PickupTouchCount++;
+		
 	}
 } 
 
@@ -144,7 +128,7 @@ void AMysteryBoxPickup::ResetSpeed()
 {
 	if (MovementComponent)
 	{
-		//Divide by Speed Multiplier to get original movement speed
+		//Original Movement Speed
 		MovementComponent->MaxWalkSpeed /= SpeedMultiplier;
 		//UE_LOG(LogTemp, Warning, TEXT("Movement Component is NOT NULL"));
 	}
@@ -155,26 +139,55 @@ void AMysteryBoxPickup::MoveBoxDown()
 	//Moves Box out of the Map
 	//Grab Box location and move down along the z axis
 	FVector NewLocation = GetActorLocation();
-	NewLocation.Z *= -5;
+	NewLocation.Z *= -5; //Arbitrary value 
 	SetActorLocation(NewLocation);
 }
 
-void AMysteryBoxPickup::GenerateHealthAmount(UHealthComponent* PlayerHealthComponent)
+void AMysteryBoxPickup::GenerateAndSetHealthAmount(UHealthComponent* PlayerHealthComponent)
 {
+	/** Heal for a percentage of missing hp
+	* @var MissingHealthPercentage: Percentage of missing Health
+	* @var PerlinNum: Random Number using 1D Perlin Noise with Missing Health as Input
+	* @var HealPercentage: Percentage of Missing Health to be healed; Affected by 
+	* the MissingHealthPercentage and PerlinNum.
+	*
+	*/
 	float HealthPercentageRemaining = PlayerHealthComponent->HealthPercentageRemaining();
-	//Heal for a percentage of missing hp
-	//Pecentage is relative to missing hp 
-	//Offset by randomness
-	float MissingHealth = PlayerHealthComponent->MaxHealth * (1 - HealthPercentageRemaining);
-	float MissingHealthPercentage = 1 - HealthPercentageRemaining; 
+	float MissingHealthPercentage = 1 - HealthPercentageRemaining;
+	float MissingHealth = PlayerHealthComponent->MaxHealth * MissingHealthPercentage;
 
 	//Absolute value to establish range between 0 to 1
 	float PerlinNum = FMath::Abs(FMath::PerlinNoise1D(MissingHealth));
 
-	//Ensure Player never Heals full amount via RandomOffset
-	if (PerlinNum == 0) { PerlinNum = FMath::Abs(FMath::PerlinNoise1D(MissingHealth)); }
-	//3 - Arbitrary number to lower PerlinNum
-	float Offset = MissingHealthPercentage - (PerlinNum / 3); //Produces Health Percentage 
+	//Ensure Player never Heals full amount via RandomOffset  (MissingHealth^0 = 1) 
+	if (PerlinNum == 0) { PerlinNum = FMath::Abs<float>(FMath::PerlinNoise1D(MissingHealth)); }
+
+	//Heal percentage relative to percentage of missing hp with random offset via PerlinNoise
+	//"3" is a arbitrary number to lower PerlinNum value
+	float Offset = MissingHealthPercentage * (PerlinNum / 3);
+	float HealPercentage = MissingHealthPercentage - Offset;
 	//Amount of Health to be recovered
-	HealthAmount = MissingHealth * Offset;
+	HealthAmount = MissingHealth * HealPercentage;
+
+	//Update Health
+	HealthComponent->OnTouchHealthBoost(HealthAmount);
+	//UE_LOG(LogTemp, Warning, TEXT("MISSING HEALTH PERCENTAGE: %f"), MissingHealthPercentage);
+	//UE_LOG(LogTemp, Warning, TEXT("MISSING HEALTH : %f"), MissingHealth);
+	//UE_LOG(LogTemp, Warning, TEXT("HEAL PERCENTAGE: %f"), HealPercentage);
+	//UE_LOG(LogTemp, Warning, TEXT("PERLIN AMOUNT by: %f"), PerlinNum);
+	//UE_LOG(LogTemp, Warning, TEXT("Health Recovered by: %f"), HealthAmount);
+}
+
+void AMysteryBoxPickup::GenerateAndSetSpeedMultiplier(UHealthComponent* PlayerHealthComponent,
+	UCharacterMovementComponent* PlayerMovementComponent)
+{
+	/**Exponentially increase Movement Speed based on Missing Health
+	* BaseSpeedMultiplier: Offset Value to prevent SpeedMultiplier equating to 1.
+	* HealthPercentageMissing: Percentage of Player's missing Health
+	*/
+	float HealthPercentageMissing = 1 - PlayerHealthComponent->HealthPercentageRemaining();
+	SpeedMultiplier = BaseSpeedMultiplier + FMath::Pow(MaxSpeedMultiplier, HealthPercentageMissing);
+	//Update Movement Speed
+	PlayerMovementComponent->MaxWalkSpeed *= SpeedMultiplier;
+	UE_LOG(LogTemp, Warning, TEXT("Speed Boost by: %f"), SpeedMultiplier);
 }
