@@ -20,10 +20,11 @@ public:
 	// Sets default values for this actor's properties
 	APickupManager();
 
-	AProcedurallyGeneratedMap* ProceduralMap;
-
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<APickup> MysteryBoxPickupClass; 
+
+	AProcedurallyGeneratedMap* ProceduralMap;
+	AMysteryBoxPickup* MysteryBox;
 
 protected:
 	// Called when the game starts or when spawned
@@ -33,28 +34,30 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	
+	TArray<FVector> GetNodeLocations();
+	int32 GetNumberOfCharacters(); //Return number of Characters in the world
+	int32 GetNumberOfMysteryBoxes(); //Return number of MysteryBoxes in the world
 
 private:
 	//Variables
 	TArray<FVector> PossibleSpawnLocations;
-	int32 NumberOfNodes; 
 	ANavigationNode* Node;
 	FTimerHandle MysteryBoxSpawnTimer;
+
+	//Delay in seconds between spawns of Mystery Boxes, Editable within editor
+	UPROPERTY(EditAnywhere)
 	float FrequencyOfMysteryBoxSpawns;
-	AMysteryBoxPickup* MysteryBox; 
+	
 	
 	//Functions
-	TArray<FVector> GetNodeLocations(); //Initalise 
 	void SpawnMysteryBoxPickup();
+	FVector GenerateLocation(); //Generate Location of MysteryBoxPickup based on it's Type
 
 	/** Generate an array that sorts the given array by specified order
 	 *	@param NodeLocations: The array of all the node locations
 	 *	@param bIsAscendingOrder: Check whether Array is sorted in Descending order; Default is Ascending
 	*/
 	TArray<FVector> SortNodesByZValue(TArray<FVector> NodeLocations, bool bIsDescendingOrder); 
-	FVector GenerateLocation(); //Generate Location of MysteryBoxPickup based on it's Type
-	int32 GetNumberOfCharacters(); //Return number of Characters in the world
-	int32 GetNumberOfMysteryBoxes(); //Return number of MysteryBoxes in the world
+	
 
 };

@@ -61,7 +61,6 @@ TArray<FVector> APickupManager::GetNodeLocations()
 			}
 		}
 	}
-
 	return NodeLocations;
 }
 
@@ -80,16 +79,19 @@ void APickupManager::SpawnMysteryBoxPickup()
 
 FVector APickupManager::GenerateLocation()
 {
-	//Generate Location based on the following:
-	//Player Health
-	//Type of Effect 
-	//If weapon, Rarity of Weapon --Impossible to Get rarity, because it's assigned upon pickup
+	/*
+	//Mystery Box will spawn at different height regions of the map depending on its "Type"
+	//These regions are proportional to the number of types
+	//The current Mystery Box has only 3 "Types" 
+	//Weapon - Highest 1/3(33%) of points will contain weapons
+	//Boost Effects (Health, Speeed) - Lowest 1/3 of points will contain boost effects
+	//Middle Range will not contain any mystery boxes.
+	//Note: There are only 3 Types currently
+	//----- Varying number of "Types" will cause changes to its range
+	//----- These comments will refer to Mystery Boxes have only 3 types.
+	*/
 
-	//Generate Location if Weapon Pickup
-	//Weapons Higher spot
-	//Health/Speed Boost lower spectrum 
-	//This bit can be pcg
-	//Algorithm for finding highest node via Z
+	//Algorithm for finding highest node via its Z-Value
 	FVector NewSpawnLocation = FVector::ZeroVector; 
 	TArray<FVector> SortedNodesArray = SortNodesByZValue(PossibleSpawnLocations, false);
 
@@ -101,26 +103,19 @@ FVector APickupManager::GenerateLocation()
 		//Minus as there's an additional Enum element added by unreal
 		NumberOfTypes = EnumPtr->NumEnums() - 1;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Number of Mystery Box Types, %i"), NumberOfTypes);
+	//UE_LOG(LogTemp, Warning, TEXT("Number of Mystery Box Types, %i"), NumberOfTypes);
 
-	//Mystery Box will spawn at different heights of the map depending on its "Type"
-	//Weapon - Highest 1/3(33%) of points will contain weapons
-	//Boost Effects (Health, Speeed) - Lowest 1/3 of points will contain boost effects
-	//Middle Range will not contain any mystery boxes.
-	//Note: There are only 3 Types currently
-	//----- Varying number of "Types" will cause changes to its range
-	//----- These comments will refer to Mystery Boxes have only 3 types.
 	if (MysteryBox)
 	{
 		if (MysteryBox->Type == MysteryBoxPickupType::WEAPON)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("WEAPON IS VALID: NOW GENERATING NEW LOCATION"));
+			//UE_LOG(LogTemp, Warning, TEXT("WEAPON IS VALID: NOW GENERATING NEW LOCATION"));
 			//Choose a random point within highest points of the map (Top 33%)
-			//Sort the Array asecndingly by z-value or height
+			//Sort the Array ascendingly by z-value or height
 			
 			//Grab the Range of the High Points
 			//Starting value is the number of Nodes minus 1/3 of the number of nodes
-			//This will produce a number representing 66% of the Number of Nodes
+			//This will produce a number representing the 66th percentile of the Number of Nodes
 			int32 HighPointsStart = SortedNodesArray.Num() - (SortedNodesArray.Num() / NumberOfTypes); 
 			int32 HighPointsEnd = SortedNodesArray.Num();
 			int32 HighRangeIndex = FMath::FRandRange(HighPointsStart, HighPointsEnd);
@@ -176,6 +171,7 @@ TArray<FVector> APickupManager::SortNodesByZValue(TArray<FVector> NodeLocations,
 	//Implement Sorting Algorithm
 	//Bubble Sort -- easiest but slow 
 	//Quick Sort -- harder but quicker 
+
 	TArray<FVector> SortedArray = NodeLocations;
 
 	if (bIsDescendingOrder)
@@ -211,9 +207,6 @@ TArray<FVector> APickupManager::SortNodesByZValue(TArray<FVector> NodeLocations,
 		do
 		{
 			bSwappedHappened = false;
-			//Loop through each node
-			//To avoid reach outside the bounds of the array
-			//we minus 1 from the comparison since we use i++
 			for (int32 i = 0; i < PossibleSpawnLocations.Num() - 1; i++)
 			{
 				//If current Node is higher than the next node

@@ -25,41 +25,38 @@ class ADVGAMESPROGRAMMING_API AMysteryBoxPickup : public APickup
 
 public:
 	AMysteryBoxPickup();
+	//Materials
+	UPROPERTY(EditAnywhere)
+		UMaterial* HealthMaterial;
+	UPROPERTY(EditAnywhere)
+		UMaterial* WeaponMaterial;
+	UPROPERTY(EditAnywhere)
+		UMaterial* BoostMaterial;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	int32 HealthAmount; 
+	UPROPERTY(EditAnywhere)
+		TSubclassOf<AWeaponPickup> WeaponPickupClass;
 
-	UPROPERTY(VisibleAnywhere)
+	//Movement Speed Variables
+	float BaseSpeedMultiplier;
 	float SpeedMultiplier;
+	UPROPERTY(EditAnywhere)
+		float MaxSpeedMultiplier;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-		MysteryBoxPickupType Type;
+	//Health
+	int32 HealthAmount;
+	UHealthComponent* HealthComponent;
 
-	UPROPERTY(VisibleAnywhere)
+	MysteryBoxPickupType Type;
 	UStaticMeshComponent* MeshComponent;
-
-	UPROPERTY(EditAnywhere)
-	UMaterial* HealthMaterial;
-
-	UPROPERTY(EditAnywhere)
-	UMaterial* WeaponMaterial;
-
-	UPROPERTY(EditAnywhere)
-	UMaterial* BoostMaterial;
-
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<AWeaponPickup> WeaponPickupClass;
-	
 	AWeaponPickup* WeaponPickup;
 	APlayerCharacter* PlayerThatPickedUp;
 	UCharacterMovementComponent* MovementComponent;
-	UHealthComponent* HealthComponent;
-
-	FTimerHandle FirstHandle;
-	FTimerHandle SecondHandle;
-
+	
+	
 private:
 	int32 PickupTouchCount; 
+	FTimerHandle FirstHandle;
+	FTimerHandle SecondHandle;
 public:
 	
 	//Blueprint usuable is temporary
@@ -69,8 +66,14 @@ public:
 		void OnPickup(AActor* ActorThatPickedUp) override;
 
 	UFUNCTION()
-	void ResetSpeed();
+		void ResetSpeed();
 
 	UFUNCTION()
 		void MoveBoxDown();
+
+	/** Generate a value for "HealthAmount" based on PlayerCharacter Current Health
+	* @param PlayerHealthComponent: Health component attached to the Player
+	*/
+	void GenerateHealthAmount(UHealthComponent* PlayerHealthComponent);
+
 };
