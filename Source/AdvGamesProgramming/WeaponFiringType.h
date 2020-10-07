@@ -8,6 +8,7 @@ UENUM(BlueprintType)
 enum class WeaponFiringType : uint8
 {
 	SINGLE_SHOT,
-	TRIPLE_SHOT,
-	AUTOMATIC
+	MULTI_SHOT,
+	AUTOMATIC,
+	SNIPER
 };
