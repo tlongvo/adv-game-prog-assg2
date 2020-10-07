@@ -37,4 +37,6 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void OnDeath();
+
+	void OnTouchHealthBoost(float HealthAmount);
 };
