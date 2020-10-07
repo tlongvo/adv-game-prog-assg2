@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "WeaponFiringType.h"
 #include "CoreMinimal.h"
 #include "Pickup.h"
 #include "WeaponPickup.generated.h"
@@ -34,6 +35,9 @@ public:
 		WeaponPickupRarity Rarity;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		WeaponFiringType FiringType;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		float BulletDamage;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		float MuzzleVelocity;
@@ -41,6 +45,8 @@ public:
 		int32 MagazineSize;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		float WeaponAccuracy;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		float FireRate;
 
 private:
 
