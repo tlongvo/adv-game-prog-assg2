@@ -139,10 +139,10 @@ void AMysteryBoxPickup::ResetSpeed()
 
 void AMysteryBoxPickup::MoveBoxDown()
 {
-	//Moves Box out of the Map
+	//Moves Box under the map
 	//Grab Box location and move down along the z axis
 	FVector NewLocation = GetActorLocation();
-	NewLocation.Z *= -5; //Arbitrary value 
+	NewLocation.Z -= 1000.0f; //Arbitrary value 
 	SetActorLocation(NewLocation);
 }
 
