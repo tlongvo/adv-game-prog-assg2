@@ -18,7 +18,8 @@ void AMysteryBoxPickup::OnGenerate() //Call in Blueprint to execute
 	Super::OnGenerate();
 	//Goal: Determine the "Type" of the Mystery Box
 
-	//Set Default MaxSpeedMultiplier
+	//Initialise Speed Variables
+	SpeedMultiplier = 0.0f;
 	BaseSpeedMultiplier = 0.2f; //Offset to prevent Multplier equating to 1
 	MaxSpeedMultiplier = 5.0f; 
 
@@ -47,7 +48,7 @@ void AMysteryBoxPickup::OnGenerate() //Call in Blueprint to execute
 
 void AMysteryBoxPickup::OnPickup(AActor* ActorThatPickedUp) //Generates stats/effects for the chosen "Type"
 {
-	Super::OnPickup(ActorThatPickedUp);
+	//Super::OnPickup(ActorThatPickedUp);
 	/**Description of each "Type" functionality
 	* If "Speed" --> Increase Player's movement speed temporarily
 	* If "Health" --> Recover Player's health 
@@ -64,6 +65,9 @@ void AMysteryBoxPickup::OnPickup(AActor* ActorThatPickedUp) //Generates stats/ef
 		//If MysteryBox has not been touched
 		if (!bHasBeenTouched)
 		{
+			//Remove Mystery Box - Move Box out of visible map after 1 second
+			GetWorld()->GetTimerManager().SetTimer(FirstHandle, this, &AMysteryBoxPickup::MoveBoxDown, 1.0f, false);
+
 			//Apply effect of selected box type
 			if (Type == MysteryBoxPickupType::HEALTH)
 			{
@@ -107,13 +111,12 @@ void AMysteryBoxPickup::OnPickup(AActor* ActorThatPickedUp) //Generates stats/ef
 						//Change MysteryBox material to respective Speed Material (Yellow)
 						MeshComponent->SetMaterial(0, BoostMaterial);
 
-						//Remove Mystery Box - Move Box out of visible map after 1 second
-						GetWorld()->GetTimerManager().SetTimer(FirstHandle, this, &AMysteryBoxPickup::MoveBoxDown, 1.0f, false);
 						//Reset movement speed after 3 seconds
 						GetWorld()->GetTimerManager().SetTimer(SecondHandle, this, &AMysteryBoxPickup::ResetSpeed, 3.0f, false);
 					}
 				}
 			}
+
 			//Destroy Object after specified time
 			//Needs to be higher than Timer, otherwise Timer won't work (access errors)
 			this->SetLifeSpan(3.1f);
@@ -175,7 +178,7 @@ void AMysteryBoxPickup::GenerateAndSetHealthAmount(UHealthComponent* PlayerHealt
 	//UE_LOG(LogTemp, Warning, TEXT("MISSING HEALTH : %f"), MissingHealth);
 	//UE_LOG(LogTemp, Warning, TEXT("HEAL PERCENTAGE: %f"), HealPercentage);
 	//UE_LOG(LogTemp, Warning, TEXT("PERLIN AMOUNT by: %f"), PerlinNum);
-	//UE_LOG(LogTemp, Warning, TEXT("Health Recovered by: %f"), HealthAmount);
+	UE_LOG(LogTemp, Warning, TEXT("Health Recovered by: %f"), HealthAmount);
 }
 
 void AMysteryBoxPickup::GenerateAndSetSpeedMultiplier(UHealthComponent* PlayerHealthComponent,
