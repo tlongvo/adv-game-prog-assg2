@@ -15,7 +15,7 @@ void AWeaponPickup::OnGenerate()
 		int32 RandomRarityValue = FMath::RandRange(1, 100);
 	int32 RandomWeaponValue = FMath::RandRange(1, 4);
 
-	//Will populate the RandBoolArray with a shuffled set of boolean values depending on the weapon rarity.
+	// Pick a random weapon firing type
 	switch (RandomWeaponValue)
 	{
 	case 1:
@@ -35,6 +35,7 @@ void AWeaponPickup::OnGenerate()
 		break;
 	}
 
+	// Generate bool array and set rarity based on random chance
 	TArray<bool> RandBoolArray;
 	if (RandomRarityValue <= 5)
 	{
@@ -57,6 +58,7 @@ void AWeaponPickup::OnGenerate()
 		GenerateRandBooleanArray(5, 0, RandBoolArray);
 	}
 
+	// Set the statistics for each firing type based on custom ranges
 	switch(FiringType)
 	{
 	case WeaponFiringType::SINGLE_SHOT:
@@ -99,9 +101,6 @@ void AWeaponPickup::OnGenerate()
 
 		break;
 	}
-
-	//Assign the good or bad weapon characteristics based on the result of the random boolean array.
-
 }
 
 void AWeaponPickup::GenerateRandBooleanArray(int32 ArrayLength, int32 NumTrue, TArray<bool> & RandBoolArray)
