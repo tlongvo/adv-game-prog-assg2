@@ -6,6 +6,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/World.h"
 #include "Net/UnrealNetwork.h"
+#include "MultiplayerGameMode.h"
+#include "PlayerHUD.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -109,6 +111,38 @@ void APlayerCharacter::SprintEnd()
 	ServerSprintEnd();
 }
 
+void APlayerCharacter::OnDeath()
+{
+	//If Player is dead on the server
+	//Then respawn them and pass this info down to the clients 
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		AMultiplayerGameMode* GameMode = Cast<AMultiplayerGameMode>(GetWorld()->GetAuthGameMode());
+		//If gamemode found
+		if (GameMode)
+		{
+			//Respawn Player 
+			GameMode->Respawn(GetController());
+		}
+	}
+
+}
+
+void APlayerCharacter::HidePlayerHUD_Implementation(bool bSetHUDVisibility)
+{ 
+	//Get the player controller then the player hud of the autonomous proxy 
+	// CAN ALSO JUST CHECK FOR IsLocallyControlled()
+	if (GetLocalRole() == ROLE_AutonomousProxy || (GetLocalRole() == ROLE_Authority && IsLocallyControlled()))
+	{
+		if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+		{
+			if (APlayerHUD* HUD = Cast<APlayerHUD>(PlayerController->GetHUD()))
+			{
+				HUD->SetHideWidgets(bSetHUDVisibility);
+			}
+		}
+	}
+}
 void APlayerCharacter::ServerSprintStart_Implementation()
 {
 	GetCharacterMovement()->MaxWalkSpeed = SprintMovementSpeed;

@@ -19,10 +19,6 @@ class ADVGAMESPROGRAMMING_API APickupManager : public AActor
 public:	
 	// Sets default values for this actor's properties
 	APickupManager();
-
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<APickup> MysteryBoxPickupClass; 
-
 	AProcedurallyGeneratedMap* ProceduralMap;
 	AMysteryBoxPickup* MysteryBox;
 
@@ -34,13 +30,25 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	//From Lab
+	void Init(const TArray<FVector>& SpawnLocations, TSubclassOf<class APickup> WeaponPickup, TSubclassOf<APickup> MysteryBoxPickup, float FrequencyOfSpawn);
+
+	//Custom Functions
 	TArray<FVector> GetNodeLocations();
 	int32 GetNumberOfCharacters(); //Return number of Characters in the world
 	int32 GetNumberOfMysteryBoxes(); //Return number of MysteryBoxes in the world
 
 private:
-	//Variables
+	//From Lab
 	TArray<FVector> PossibleSpawnLocations;
+	TSubclassOf<class APickup> WeaponPickupClass;
+	float FrequencyOfWeaponPickupSpawns;
+	FTimerHandle WeaponSpawnTimer;
+
+	//Custom
+	//TArray<FVector> PossibleSpawnLocations;
+	UPROPERTY(EditAnywhere)
+		TSubclassOf<APickup> MysteryBoxPickupClass;
 	ANavigationNode* Node;
 	FTimerHandle MysteryBoxSpawnTimer;
 
@@ -59,5 +67,8 @@ private:
 	*/
 	TArray<FVector> SortNodesByZValue(TArray<FVector> NodeLocations, bool bIsDescendingOrder); 
 	
-
+	/**
+	 * Will spawn a single weapon pickup in a random location from the PossibleSpawnLocation array.
+	 */
+	void SpawnWeaponPickup();
 };

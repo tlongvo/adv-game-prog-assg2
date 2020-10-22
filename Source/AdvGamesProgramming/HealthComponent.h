@@ -30,7 +30,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
 	float MaxHealth;
 
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(ReplicatedUsing = UpdateHealthBar, VisibleAnywhere, BlueprintReadOnly)
 	float CurrentHealth;
 
 	UFUNCTION(BlueprintCallable)
@@ -42,4 +42,9 @@ public:
 	float HealthPercentageRemaining();
 
 	void OnTouchHealthBoost(float HealthAmount);
+
+private:
+	UFUNCTION()
+		void UpdateHealthBar();
+
 };
