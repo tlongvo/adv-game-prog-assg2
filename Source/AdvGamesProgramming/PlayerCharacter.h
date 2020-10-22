@@ -40,6 +40,8 @@ public:
 	void SprintStart();
 	void SprintEnd();
 
+	void OnDeath();
+
 	/**
 	 * Will adjust the movement speed of the server character to sprinting
 	 */
@@ -56,6 +58,13 @@ public:
 	 * Client function that will hide or show the hud.
 	 * @param bSetHudVisibility: Whether the hud should be hidden or shown.
 	 */
+
+	 /**
+	  * Client function that will hide or show the hud.
+	  * @param bSetHudVisibility: Whether the hud should be hidden or shown.
+	  */
+	UFUNCTION(Client, Reliable)
+		void HidePlayerHUD(bool bSetHUDVisibility);
 
 private:
 	UPROPERTY(EditInstanceOnly)

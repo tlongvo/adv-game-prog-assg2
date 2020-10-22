@@ -4,6 +4,7 @@
 #include "EngineUtils.h"
 #include "Engine/World.h"
 #include "WeaponPickup.h"
+#include "Engine/GameEngine.h"
 
 // Sets default values
 APickupManager::APickupManager()
@@ -20,18 +21,29 @@ void APickupManager::BeginPlay()
 	Super::BeginPlay();
 
 	//Get all node locations as possible spawn locations
-	PossibleSpawnLocations = GetNodeLocations();
+	//PossibleSpawnLocations = GetNodeLocations();
 
 	//Looping function call with delay of "FrequencyOfMysteryBoxSpawns"
 	//Function call is looped via "true" paramater
 	GetWorldTimerManager().SetTimer(MysteryBoxSpawnTimer, this,
 		&APickupManager::SpawnMysteryBoxPickup, FrequencyOfMysteryBoxSpawns, true, 0.0f);
+
+	//Spawn WeaponPickup every "FrequencyOfWeaponPickupSpawns" seconds
+	GetWorldTimerManager().SetTimer(WeaponSpawnTimer, this, &APickupManager::SpawnWeaponPickup, FrequencyOfWeaponPickupSpawns, true, 0.0f);
 }
 
 // Called every frame
 void APickupManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+void APickupManager::Init(const TArray<FVector>& SpawnLocations, TSubclassOf<APickup> WeaponPickup, TSubclassOf<APickup> MysteryBoxPickup, float FrequencyOfSpawn)
+{
+	PossibleSpawnLocations = SpawnLocations;
+	WeaponPickupClass = WeaponPickup;
+	FrequencyOfWeaponPickupSpawns = FrequencyOfSpawn;
+	MysteryBoxPickupClass = MysteryBoxPickup;
 }
 
 TArray<FVector> APickupManager::GetNodeLocations() //Return all nodes locations in the map
@@ -65,10 +77,32 @@ TArray<FVector> APickupManager::GetNodeLocations() //Return all nodes locations 
 	return NodeLocations;
 }
 
-void APickupManager::SpawnMysteryBoxPickup()
+void APickupManager::SpawnWeaponPickup()
 {
+	//Find a random index in the array of spawn locations.
+	int32 RandomIndex = FMath::RandRange(0, PossibleSpawnLocations.Num() - 1);
+
+	//Attempt to spawn in the weapon pickup and write a warning to the log if it was unable to spawn it in.
+	if (APickup* WeaponPickup = GetWorld()->SpawnActor<APickup>(WeaponPickupClass,
+		PossibleSpawnLocations[RandomIndex] + FVector(0.0f, 0.0f, 50.0f), FRotator::ZeroRotator))
+	{
+		WeaponPickup->SetLifeSpan(20.0f);
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, FString::Printf(TEXT("Pickup Spawned")));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Unable to spawn weapon pickup."));
+	}
+}
+
+void APickupManager::SpawnMysteryBoxPickup()
+{	
 	//Check for existance of Nodes on map
 	//And limit no. of Mystery Boxes to no. of Characters 
+
 	if (PossibleSpawnLocations.IsValidIndex(0) && GetNumberOfMysteryBoxes() < GetNumberOfCharacters())
 	{
 		//Spawn MysteryBox into the map with zero location and position
@@ -76,7 +110,18 @@ void APickupManager::SpawnMysteryBoxPickup()
 		
 		//Set location based on the box "Type"
 		MysteryBox->SetActorLocation(GenerateLocation());
+		
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, FString::Printf(TEXT("Weapon Pickup Spawned")));
+		}
+		
 	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Unable to Spawn MysteryBox "));
+	}
+	
 }
 
 FVector APickupManager::GenerateLocation()

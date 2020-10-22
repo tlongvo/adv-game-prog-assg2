@@ -4,6 +4,8 @@
 #include "HealthComponent.h"
 #include "EnemyCharacter.h"
 #include "Engine/GameEngine.h"
+#include "PlayerCharacter.h"
+#include "PlayerHUD.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 // Sets default values for this component's properties
@@ -70,7 +72,11 @@ void UHealthComponent::OnTakeDamage(float Damage)
 
 void UHealthComponent::OnDeath()
 {
-
+	APlayerCharacter* OwningPlayerCharacter = Cast<APlayerCharacter>(GetOwner());
+	if (OwningPlayerCharacter)
+	{
+		OwningPlayerCharacter->OnDeath();
+	}
 }
 
 float UHealthComponent::HealthPercentageRemaining()
@@ -81,4 +87,21 @@ float UHealthComponent::HealthPercentageRemaining()
 void UHealthComponent::OnTouchHealthBoost(float HealthAmount)
 {
 	CurrentHealth += HealthAmount; 
+}
+
+void UHealthComponent::UpdateHealthBar()
+{
+	//If the owner of this health component is an autonomous proxy
+	//NOTE: Possible to use function GetOwnerRole() as well!
+	//Auto Proxy only works for dedicated servers
+	if (GetOwnerRole() == ROLE_AutonomousProxy)
+	{
+			//Find the hud associated to this player
+			APlayerHUD* HUD = Cast<APlayerHUD>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetHUD());
+			if (HUD)
+			{
+				//Update the progress bar widget on the players hud.
+				HUD->SetPlayerHealthBarPercent(HealthPercentageRemaining());
+			}
+	}
 }
