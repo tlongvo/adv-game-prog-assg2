@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "Kismet/KismetArrayLibrary.h"
 #include "WeaponPickup.h"
-
+#include "Kismet/KismetArrayLibrary.h"
+#include "Net/UnrealNetwork.h"
 void AWeaponPickup::OnGenerate()
 {
 	APickup::OnGenerate();
@@ -122,4 +122,14 @@ void AWeaponPickup::GenerateRandBooleanArray(int32 ArrayLength, int32 NumTrue, T
 
 }
 
+void AWeaponPickup::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	DOREPLIFETIME(AWeaponPickup, Rarity);
+	DOREPLIFETIME(AWeaponPickup, FiringType);
+	DOREPLIFETIME(AWeaponPickup, BulletDamage);
+	DOREPLIFETIME(AWeaponPickup, MuzzleVelocity);
+	DOREPLIFETIME(AWeaponPickup, MagazineSize);
+	DOREPLIFETIME(AWeaponPickup, WeaponAccuracy);
+}
