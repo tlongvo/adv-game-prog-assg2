@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Camera/CameraComponent.h"
+#include "HealthComponent.h"
 #include "PlayerCharacter.generated.h"
 
 UCLASS()
@@ -15,10 +16,14 @@ class ADVGAMESPROGRAMMING_API APlayerCharacter : public ACharacter
 public:
 	// Sets default values for this character's properties
 	APlayerCharacter();
+	UHealthComponent* HealthComponent;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	float NormalMovementSpeed;
+	float SprintMovementSpeed;
 
 public:	
 	// Called every frame
@@ -34,6 +39,23 @@ public:
 
 	void SprintStart();
 	void SprintEnd();
+
+	/**
+	 * Will adjust the movement speed of the server character to sprinting
+	 */
+	UFUNCTION(Server, Reliable)
+		void ServerSprintStart();
+
+	/**
+	 * Will adjust the movement speed of the server character to normal walking speed
+	 */
+	UFUNCTION(Server, Reliable)
+		void ServerSprintEnd();
+
+	/**
+	 * Client function that will hide or show the hud.
+	 * @param bSetHudVisibility: Whether the hud should be hidden or shown.
+	 */
 
 private:
 	UPROPERTY(EditInstanceOnly)
