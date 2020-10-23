@@ -61,13 +61,20 @@ void UHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 void UHealthComponent::OnTakeDamage(float Damage)
 {
-
+	//Calls in listen servers where Player is also a host (server)
+	if (GetOwnerRole() == ROLE_Authority)
+	{
+		UpdateHealthBar();
+	}
+	
 	CurrentHealth -= Damage;
 	if (CurrentHealth <= 0) 
 	{
 		CurrentHealth = 0;
 		OnDeath();
 	}
+
+	
 }
 
 void UHealthComponent::OnDeath()
@@ -94,8 +101,13 @@ void UHealthComponent::UpdateHealthBar()
 	//If the owner of this health component is an autonomous proxy
 	//NOTE: Possible to use function GetOwnerRole() as well!
 	//Auto Proxy only works for dedicated servers
-	if (GetOwnerRole() == ROLE_AutonomousProxy)
+	//IsLocallyControlled() allows for listen and dedicated servers to work. 
+	APlayerCharacter* OwningCharacter = Cast<APlayerCharacter>(GetOwner()); 
+	if (OwningCharacter)
 	{
+		//Update HealthBar HUD on the controller Player's screen.
+		if (OwningCharacter->IsLocallyControlled()) 
+		{
 			//Find the hud associated to this player
 			APlayerHUD* HUD = Cast<APlayerHUD>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetHUD());
 			if (HUD)
@@ -103,5 +115,8 @@ void UHealthComponent::UpdateHealthBar()
 				//Update the progress bar widget on the players hud.
 				HUD->SetPlayerHealthBarPercent(HealthPercentageRemaining());
 			}
+		}
+		
 	}
+	
 }

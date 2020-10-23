@@ -6,6 +6,8 @@
 #include "GameFramework/HUD.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/ProgressBar.h"
+#include "Components/TextBlock.h"
+#include "Components/Image.h"
 #include "PlayerHUD.generated.h"
 
 /**
@@ -26,6 +28,15 @@ public:
 	void SetPlayerHealthBarPercent(float Percent);
 
 	/**
+	 * Will set the ammo text block to reflect the amound of ammo left in the magazine and the magazine size
+	 * @param RoundsRemaining: The number of rounds left in the magazine
+	 * @param MagazineSize: The number of rounds in a full magazine
+	 */
+	UFUNCTION(BlueprintCallable)
+		void SetAmmoText(int32 RoundsRemaining, int32 MagazineSize);
+
+
+	/**
 	 * Hides or shows the widgets in the hud.
 	 * @param bIsHidden: Whether the widgets should be hidden (true) or shown (false)
 	 */
@@ -35,4 +46,6 @@ private:
 	TSubclassOf<class UUserWidget> PlayerHUDClass;
 	UUserWidget* CurrentPlayerHUDWidget;
 	UProgressBar* HealthProgressBar;
+	UTextBlock* AmmoTextBlock;
+	UImage* CrosshairImageBlock;
 };
