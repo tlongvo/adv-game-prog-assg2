@@ -196,11 +196,3 @@ void AMysteryBoxPickup::GenerateAndSetSpeedMultiplier(UHealthComponent* PlayerHe
 	PlayerMovementComponent->MaxWalkSpeed *= SpeedMultiplier;
 	UE_LOG(LogTemp, Warning, TEXT("Speed Boost by: %f"), SpeedMultiplier);
 }
-
-void AMysteryBoxPickup::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(AMysteryBoxPickup, Type);
-	
-}

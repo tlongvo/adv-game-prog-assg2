@@ -37,7 +37,6 @@ public:
 	UPROPERTY(EditAnywhere)
 		TSubclassOf<AWeaponPickup> WeaponPickupClass;
 
-	UPROPERTY(Replicated, VisibleAnywhere)
 	MysteryBoxPickupType Type; 
 
 	//Movement Speed Variables
@@ -63,8 +62,7 @@ private:
 	FTimerHandle FirstHandle; //Handle for MoveBoxDown()
 	FTimerHandle SecondHandle; //Handle for ResetSpeed() 
 public:
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
+	
 	UFUNCTION(BlueprintCallable)
 		void OnGenerate() override; //Generate "Type" of Effect
 
