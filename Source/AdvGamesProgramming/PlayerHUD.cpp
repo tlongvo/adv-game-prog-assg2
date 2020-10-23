@@ -23,8 +23,9 @@ APlayerHUD::APlayerHUD()
 			//Find the health bar and the ammo text block
 			
 			HealthProgressBar = Cast<UProgressBar>(CurrentPlayerHUDWidget->GetWidgetFromName(TEXT("ProgHealthBar")));
-			/*
+			
 			AmmoTextBlock = Cast<UTextBlock>(CurrentPlayerHUDWidget->GetWidgetFromName(TEXT("TextAmmo")));
+			/*
 			CrosshairImageBlock = Cast<UImage>(CurrentPlayerHUDWidget->GetWidgetFromName(TEXT("ImgCrosshair")));
 			*/
 		}
@@ -33,8 +34,17 @@ APlayerHUD::APlayerHUD()
 
 void APlayerHUD::SetPlayerHealthBarPercent(float Percent)
 {
-	if (HealthProgressBar) {
+	if (HealthProgressBar) 
+	{
 		HealthProgressBar->SetPercent(Percent);
+	}
+}
+
+void APlayerHUD::SetAmmoText(int32 RoundsRemaining, int32 MagazineSize)
+{
+	if (AmmoTextBlock)
+	{
+		AmmoTextBlock->SetText(FText::FromString(FString::Printf(TEXT("%i/%i"), RoundsRemaining, MagazineSize)));
 	}
 }
 
@@ -44,12 +54,13 @@ void APlayerHUD::SetHideWidgets(bool bIsHidden)
 	{
 		if (HealthProgressBar)
 			HealthProgressBar->SetVisibility(ESlateVisibility::Hidden);
-		/*
+		
 		if (AmmoTextBlock)
 			AmmoTextBlock->SetVisibility(ESlateVisibility::Hidden);
+		
 		if (CrosshairImageBlock)
 			CrosshairImageBlock->SetVisibility(ESlateVisibility::Hidden);
-			*/
+			
 	}
 	else
 	{
@@ -57,12 +68,12 @@ void APlayerHUD::SetHideWidgets(bool bIsHidden)
 		{
 			HealthProgressBar->SetVisibility(ESlateVisibility::Visible);
 		}
-		/*
+		
 		else
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Something went wrong with the hud."));
 		}
-
+		
 		if (AmmoTextBlock)
 			AmmoTextBlock->SetVisibility(ESlateVisibility::Visible);
 		if (CrosshairImageBlock)
@@ -70,7 +81,6 @@ void APlayerHUD::SetHideWidgets(bool bIsHidden)
 		//Hack way. Having Gun C++ class instead of blueprints could fix this issue
 		
 		SetAmmoText(15, 15);
-		*/
 		SetPlayerHealthBarPercent(1.0f);
 	}
 }
