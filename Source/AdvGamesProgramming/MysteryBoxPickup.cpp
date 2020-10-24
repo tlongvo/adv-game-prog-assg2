@@ -4,7 +4,7 @@
 #include "PlayerCharacter.h"
 #include "Components/StaticMeshComponent.h"
 #include "TimerManager.h" 
-
+#include "Engine/GameEngine.h"
 
 AMysteryBoxPickup::AMysteryBoxPickup()
 {
@@ -29,7 +29,7 @@ void AMysteryBoxPickup::OnGenerate() //Call in Blueprint to execute
 	//MeshComponent = FindComponentByClass<UStaticMeshComponent>();
 
 	//Randomly select Box type (33% chance per type)
-	int32 RandomPercentageNumber = FMath::RandRange(1, 100);
+	int32 RandomPercentageNumber = FMath::RandRange(66, 100);
 
 	if (RandomPercentageNumber <= 33)
 	{
@@ -56,7 +56,7 @@ void AMysteryBoxPickup::OnPickup(AActor* ActorThatPickedUp) //Generates stats/ef
 	//Initilise Mesh component
 	MeshComponent = FindComponentByClass<UStaticMeshComponent>();
 
-	if (ActorThatPickedUp->GetClass()->GetName() == FString("PlayerCharacterBlueprint_C"))
+	if (Cast<APlayerCharacter>(ActorThatPickedUp))
 	{
 		//Initilise Variables associated with Actor that picked up the MysteryBox
 		//Cast Actor to PlayerCharacter to attain a PlayerCharacter type pointer
@@ -97,7 +97,7 @@ void AMysteryBoxPickup::OnPickup(AActor* ActorThatPickedUp) //Generates stats/ef
 				FVector DirectionToTarget = ActorThatPickedUp->GetActorForwardVector();
 				Location += (DirectionToTarget * 150);
 
-				//Spawn WeaponPickup 
+				//Spawn WeaponPickup
 				WeaponPickup = GetWorld()->SpawnActor<AWeaponPickup>(WeaponPickupClass, Location, FRotator::ZeroRotator);
 				UE_LOG(LogTemp, Warning, TEXT("WeaponPickup Spawned from MysteryBox"));
 			}
@@ -111,7 +111,7 @@ void AMysteryBoxPickup::OnPickup(AActor* ActorThatPickedUp) //Generates stats/ef
 						MeshComponent->SetMaterial(0, BoostMaterial);
 
 						//Generate Speed Multiplier value and update Player Movement Speed
-						GenerateAndSetSpeedMultiplier(HealthComponent, MovementComponent);
+						GenerateAndSetSpeedMultiplier();
 					}
 				}
 			}
@@ -130,17 +130,10 @@ void AMysteryBoxPickup::ResetSpeed()
 	{
 		//Original Movement Speed
 		PlayerThatPickedUp->SprintEnd(); 
-		//UE_LOG(LogTemp, Warning, TEXT("Movement Component is NOT NULL"));
-		ServerResetSpeed();
-	}
-}
-void AMysteryBoxPickup::ServerResetSpeed_Implementation()
-{
-	if (MovementComponent)
-	{
-		//Original Movement Speed
+		//RPC to reset Authority
 		PlayerThatPickedUp->ServerSprintEnd();
 		//UE_LOG(LogTemp, Warning, TEXT("Movement Component is NOT NULL"));
+		
 	}
 }
 
@@ -185,35 +178,32 @@ void AMysteryBoxPickup::GenerateAndSetHealthAmount_Implementation(UHealthCompone
 	//UE_LOG(LogTemp, Warning, TEXT("MISSING HEALTH : %f"), MissingHealth);
 	//UE_LOG(LogTemp, Warning, TEXT("HEAL PERCENTAGE: %f"), HealPercentage);
 	//UE_LOG(LogTemp, Warning, TEXT("PERLIN AMOUNT by: %f"), PerlinNum);
-	UE_LOG(LogTemp, Warning, TEXT("Health Recovered by: %f"), HealthAmount);
+	//UE_LOG(LogTemp, Warning, TEXT("Health Recovered by: %f"), HealthAmount);
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Green, FString::Printf(TEXT("Health Recovered by: %f"), HealthAmount));
+	}
 }
 
-void AMysteryBoxPickup::GenerateAndSetSpeedMultiplier(UHealthComponent* PlayerHealthComponent,
-	UCharacterMovementComponent* PlayerMovementComponent)
+void AMysteryBoxPickup::GenerateAndSetSpeedMultiplier()
 {
 	/**Exponentially increase Movement Speed based on Missing Health
 	* BaseSpeedMultiplier: Offset Value to prevent SpeedMultiplier equating to 1.
 	* HealthPercentageMissing: Percentage of Player's missing Health
 	*/
-	float HealthPercentageMissing = 1 - PlayerHealthComponent->HealthPercentageRemaining();
+	float HealthPercentageMissing = 1 - HealthComponent->HealthPercentageRemaining();
 	SpeedMultiplier = BaseSpeedMultiplier + FMath::Pow(MaxSpeedMultiplier, HealthPercentageMissing);
 	//Update Movement Speed
-	PlayerMovementComponent->MaxWalkSpeed *= SpeedMultiplier;
-	UE_LOG(LogTemp, Warning, TEXT("Speed Boost by: %f"), SpeedMultiplier);
+	//Function includes RPC to update Authority player speed
+	PlayerThatPickedUp->IncreaseSpeed(SpeedMultiplier);
 
-	//RPC to update Authority player speed
-	ServerGenerateAndSetSpeedMultiplier();
-
+	//UE_LOG(LogTemp, Warning, TEXT("Speed Boost by: %f"), SpeedMultiplier);
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Yellow, FString::Printf(TEXT("Speed Boost: %f"), SpeedMultiplier));
+	}
 	//Reset movement speed after 3 seconds
 	GetWorld()->GetTimerManager().SetTimer(SecondHandle, this, &AMysteryBoxPickup::ResetSpeed, 3.0f, false);
-	
-}
-
-void AMysteryBoxPickup::ServerGenerateAndSetSpeedMultiplier_Implementation()
-{
-	//Use the global SpeedMultiplier variable to update Authority Player Speed. 
-	MovementComponent->MaxWalkSpeed *= SpeedMultiplier;
-	UE_LOG(LogTemp, Warning, TEXT("Speed Boost by: %f"), SpeedMultiplier);
 }
 
 void AMysteryBoxPickup::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

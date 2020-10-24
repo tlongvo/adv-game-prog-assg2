@@ -54,17 +54,18 @@ public:
 	UFUNCTION(Server, Reliable)
 		void ServerSprintEnd();
 
-	/**
-	 * Client function that will hide or show the hud.
-	 * @param bSetHudVisibility: Whether the hud should be hidden or shown.
-	 */
-
 	 /**
 	  * Client function that will hide or show the hud.
 	  * @param bSetHudVisibility: Whether the hud should be hidden or shown.
 	  */
 	UFUNCTION(Client, Reliable)
 		void HidePlayerHUD(bool bSetHUDVisibility);
+
+	void IncreaseSpeed(float SpeedMultiplier);
+	//Increase movement speed by specified amount
+	UFUNCTION(Server, Reliable)
+		void ServerIncreaseSpeed(float SpeedMultiplier);
+
 
 private:
 	UPROPERTY(EditInstanceOnly)

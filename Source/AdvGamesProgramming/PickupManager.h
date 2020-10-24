@@ -47,8 +47,7 @@ private:
 
 	//Custom
 	//TArray<FVector> PossibleSpawnLocations;
-	UPROPERTY(EditAnywhere)
-		TSubclassOf<APickup> MysteryBoxPickupClass;
+	TSubclassOf<APickup> MysteryBoxPickupClass;
 	ANavigationNode* Node;
 	FTimerHandle MysteryBoxSpawnTimer;
 

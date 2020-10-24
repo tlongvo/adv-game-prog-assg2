@@ -72,9 +72,7 @@ public:
 	UFUNCTION()
 		void OnPickup(AActor* ActorThatPickedUp) override;
 
-		void ResetSpeed();
-	UFUNCTION(Server, Reliable)
-		void ServerResetSpeed();
+	void ResetSpeed();
 
 	UFUNCTION()
 		void MoveBoxDown();
@@ -89,10 +87,6 @@ public:
 	* @param PlayerHealthComponent: Health component attached to the Player
 	* @param PlayerMovementComponent: Character Movement component 
 	*/
-	void GenerateAndSetSpeedMultiplier(UHealthComponent* PlayerHealthComponent,
-		UCharacterMovementComponent* PlayerMovementComponent);
-
-	UFUNCTION(Server, Reliable)
-		void ServerGenerateAndSetSpeedMultiplier();
+	void GenerateAndSetSpeedMultiplier();
 
 };

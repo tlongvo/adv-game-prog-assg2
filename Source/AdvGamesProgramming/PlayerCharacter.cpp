@@ -128,6 +128,12 @@ void APlayerCharacter::OnDeath()
 
 }
 
+void APlayerCharacter::IncreaseSpeed(float SpeedMultiplier)
+{
+	GetCharacterMovement()->MaxWalkSpeed *= SpeedMultiplier;
+	ServerIncreaseSpeed(SpeedMultiplier);
+}
+
 void APlayerCharacter::HidePlayerHUD_Implementation(bool bSetHUDVisibility)
 { 
 	//Get the player controller then the player hud of the autonomous proxy 
@@ -151,4 +157,9 @@ void APlayerCharacter::ServerSprintStart_Implementation()
 void APlayerCharacter::ServerSprintEnd_Implementation()
 {
 	GetCharacterMovement()->MaxWalkSpeed = NormalMovementSpeed;
+}
+
+void APlayerCharacter::ServerIncreaseSpeed_Implementation(float SpeedMultiplier)
+{
+	GetCharacterMovement()->MaxWalkSpeed *= SpeedMultiplier;
 }
