@@ -29,7 +29,7 @@ void AMysteryBoxPickup::OnGenerate() //Call in Blueprint to execute
 	//MeshComponent = FindComponentByClass<UStaticMeshComponent>();
 
 	//Randomly select Box type (33% chance per type)
-	int32 RandomPercentageNumber = FMath::RandRange(66, 100);
+	int32 RandomPercentageNumber = FMath::RandRange(0, 100);
 
 	if (RandomPercentageNumber <= 33)
 	{
