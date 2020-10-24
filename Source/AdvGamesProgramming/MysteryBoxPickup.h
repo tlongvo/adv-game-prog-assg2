@@ -69,18 +69,20 @@ public:
 		void OnGenerate() override; //Generate "Type" of Effect
 
 	//Create and execute functionality of chosen "Type"
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 		void OnPickup(AActor* ActorThatPickedUp) override;
 
-	UFUNCTION()
 		void ResetSpeed();
+	UFUNCTION(Server, Reliable)
+		void ServerResetSpeed();
 
 	UFUNCTION()
 		void MoveBoxDown();
 
-	/** Generate a value for "HealthAmount" based on PlayerCharacter Health
+	/** Generate & Set a value for "HealthAmount" based on PlayerCharacter Health
 	* @param PlayerHealthComponent: Health component attached to the Player
 	*/
+	UFUNCTION(Server, Reliable)
 	void GenerateAndSetHealthAmount(UHealthComponent* PlayerHealthComponent);
 
 	/** Generate a value for "SpeedMultiplier" based on PlayerCharacter Health
@@ -89,5 +91,8 @@ public:
 	*/
 	void GenerateAndSetSpeedMultiplier(UHealthComponent* PlayerHealthComponent,
 		UCharacterMovementComponent* PlayerMovementComponent);
+
+	UFUNCTION(Server, Reliable)
+		void ServerGenerateAndSetSpeedMultiplier();
 
 };

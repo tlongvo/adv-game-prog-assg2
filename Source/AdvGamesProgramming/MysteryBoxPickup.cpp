@@ -107,18 +107,14 @@ void AMysteryBoxPickup::OnPickup(AActor* ActorThatPickedUp) //Generates stats/ef
 					//Access Movement Component
 					if (MovementComponent && BoostMaterial)
 					{
-						//Generate Speed Multiplier value and update Player Movement Speed
-						GenerateAndSetSpeedMultiplier(HealthComponent, MovementComponent);
-
 						//Change MysteryBox material to respective Speed Material (Yellow)
 						MeshComponent->SetMaterial(0, BoostMaterial);
 
-						//Reset movement speed after 3 seconds
-						GetWorld()->GetTimerManager().SetTimer(SecondHandle, this, &AMysteryBoxPickup::ResetSpeed, 3.0f, false);
+						//Generate Speed Multiplier value and update Player Movement Speed
+						GenerateAndSetSpeedMultiplier(HealthComponent, MovementComponent);
 					}
 				}
 			}
-
 			//Destroy Object after specified time
 			//Needs to be higher than Timer, otherwise Timer won't work (access errors)
 			this->SetLifeSpan(3.1f);
@@ -126,7 +122,6 @@ void AMysteryBoxPickup::OnPickup(AActor* ActorThatPickedUp) //Generates stats/ef
 			bHasBeenTouched = true;
 		}
 	}
-		
 } 
 
 void AMysteryBoxPickup::ResetSpeed()
@@ -134,7 +129,17 @@ void AMysteryBoxPickup::ResetSpeed()
 	if (MovementComponent)
 	{
 		//Original Movement Speed
-		MovementComponent->MaxWalkSpeed /= SpeedMultiplier;
+		PlayerThatPickedUp->SprintEnd(); 
+		//UE_LOG(LogTemp, Warning, TEXT("Movement Component is NOT NULL"));
+		ServerResetSpeed();
+	}
+}
+void AMysteryBoxPickup::ServerResetSpeed_Implementation()
+{
+	if (MovementComponent)
+	{
+		//Original Movement Speed
+		PlayerThatPickedUp->ServerSprintEnd();
 		//UE_LOG(LogTemp, Warning, TEXT("Movement Component is NOT NULL"));
 	}
 }
@@ -148,7 +153,7 @@ void AMysteryBoxPickup::MoveBoxDown()
 	SetActorLocation(NewLocation);
 }
 
-void AMysteryBoxPickup::GenerateAndSetHealthAmount(UHealthComponent* PlayerHealthComponent)
+void AMysteryBoxPickup::GenerateAndSetHealthAmount_Implementation(UHealthComponent* PlayerHealthComponent)
 {
 	/** Heal for a percentage of missing hp
 	* @var MissingHealthPercentage: Percentage of missing Health
@@ -195,12 +200,25 @@ void AMysteryBoxPickup::GenerateAndSetSpeedMultiplier(UHealthComponent* PlayerHe
 	//Update Movement Speed
 	PlayerMovementComponent->MaxWalkSpeed *= SpeedMultiplier;
 	UE_LOG(LogTemp, Warning, TEXT("Speed Boost by: %f"), SpeedMultiplier);
+
+	//RPC to update Authority player speed
+	ServerGenerateAndSetSpeedMultiplier();
+
+	//Reset movement speed after 3 seconds
+	GetWorld()->GetTimerManager().SetTimer(SecondHandle, this, &AMysteryBoxPickup::ResetSpeed, 3.0f, false);
+	
+}
+
+void AMysteryBoxPickup::ServerGenerateAndSetSpeedMultiplier_Implementation()
+{
+	//Use the global SpeedMultiplier variable to update Authority Player Speed. 
+	MovementComponent->MaxWalkSpeed *= SpeedMultiplier;
+	UE_LOG(LogTemp, Warning, TEXT("Speed Boost by: %f"), SpeedMultiplier);
 }
 
 void AMysteryBoxPickup::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
 	DOREPLIFETIME(AMysteryBoxPickup, Type);
 	
 }

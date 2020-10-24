@@ -94,6 +94,10 @@ float UHealthComponent::HealthPercentageRemaining()
 void UHealthComponent::OnTouchHealthBoost(float HealthAmount)
 {
 	CurrentHealth += HealthAmount; 
+	if (GetOwnerRole() == ROLE_Authority)
+	{
+		UpdateHealthBar();
+	}
 }
 
 void UHealthComponent::UpdateHealthBar()
