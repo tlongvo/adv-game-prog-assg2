@@ -26,8 +26,8 @@ void AMysteryBoxPickup::OnGenerate() //Call in Blueprint to execute
 	HealthAmount = 0;
 
 	//Randomly select Box type (33% chance per type)
-	int32 RandomPercentageNumber = FMath::RandRange(1, 100);
-
+int32 RandomPercentageNumber = FMath::RandRange(1, 100);
+  
 	if (RandomPercentageNumber <= 33)
 	{
 		Type = MysteryBoxPickupType::HEALTH;
