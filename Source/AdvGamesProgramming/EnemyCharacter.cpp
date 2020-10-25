@@ -9,6 +9,8 @@ AEnemyCharacter::AEnemyCharacter()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	CurrentAgentState = AgentState::PATROL;
+	bOutOfAmmo = false;
+	bIsReloading = false;
 }
 
 // Called when the game starts or when spawned
@@ -156,10 +158,12 @@ void AEnemyCharacter::Tick(float DeltaTime)
 	{
 		Strafe(StrafeStartingPoint);
 	}
-	else
+	if (bOutOfAmmo && !bIsReloading)
 	{
-		MoveAlongPath();
+		UE_LOG(LogTemp, Warning, TEXT("Reloading"));
+		Reload();
 	}
+	MoveAlongPath();
 }
 
 // Called to bind functionality to input

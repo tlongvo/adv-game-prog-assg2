@@ -61,6 +61,11 @@ public:
 	UAnimInstance* AnimInst;
 	UBoolProperty* CrouchProp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+		bool bOutOfAmmo;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+		bool bIsReloading;
+
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
@@ -68,6 +73,8 @@ public:
 	void AgentEngage();
 	void AgentEvade(); 
 	void AgentFollow();
+	UFUNCTION(BlueprintImplementableEvent)
+		void Reload();
 
 	UFUNCTION()
 	void SensePlayer(AActor* ActorSensed, FAIStimulus Stimulus);
