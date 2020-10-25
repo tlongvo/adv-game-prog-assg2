@@ -17,7 +17,6 @@ APlayerCharacter::APlayerCharacter()
 
 	//AutoPossessPlayer = EAutoReceiveInput::Player0;
 	//bUseControllerRotationPitch = true;
-
 	LookSensitivity = 1.0f;
 	SprintMultiplier = 1.5f;
 
@@ -91,7 +90,6 @@ void APlayerCharacter::LookUp(float Value)
 		Camera->RelativeRotation.Yaw = 0.0f;
 		Camera->RelativeRotation.Roll = 0.0f;
 	}
-	
 }
 
 void APlayerCharacter::Turn(float Value)
@@ -125,13 +123,12 @@ void APlayerCharacter::OnDeath()
 			GameMode->Respawn(GetController());
 		}
 	}
-
 }
 
 void APlayerCharacter::IncreaseSpeed(float SpeedMultiplier)
 {
 	GetCharacterMovement()->MaxWalkSpeed *= SpeedMultiplier;
-	ServerIncreaseSpeed(SpeedMultiplier);
+	//ServerIncreaseSpeed(SpeedMultiplier);
 }
 
 void APlayerCharacter::HidePlayerHUD_Implementation(bool bSetHUDVisibility)

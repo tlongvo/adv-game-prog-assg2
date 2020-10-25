@@ -46,42 +46,11 @@ void APickupManager::Init(const TArray<FVector>& SpawnLocations, TSubclassOf<APi
 	MysteryBoxPickupClass = MysteryBoxPickup;
 }
 
-TArray<FVector> APickupManager::GetNodeLocations() //Return all nodes locations in the map
-{
-	TArray<FVector> NodeLocations;
-
-	//Getting node locations n the Procedural Map
-	for (TActorIterator<AProcedurallyGeneratedMap> It(GetWorld()); It; ++It)
-	{
-		ProceduralMap = *It;
-		if (ProceduralMap)
-		{
-			NodeLocations = ProceduralMap->Vertices;
-		}
-	}
-
-	//If map isn't a procedural map (User created)
-	if(ProceduralMap == nullptr) 
-	{
-		for (TActorIterator<ANavigationNode> Itr(GetWorld()); Itr; ++Itr)
-		{
-			//Assign the pointer to the NavigationNode pointer to Node 
-			Node = *Itr;
-			if (Node)
-			{
-				//Add to the NodeLocations Array
-				NodeLocations.Add(Node->GetTargetLocation());
-			}
-		}
-	}
-	return NodeLocations;
-}
-
 void APickupManager::SpawnWeaponPickup()
 {
 	//Find a random index in the array of spawn locations.
 	int32 RandomIndex = FMath::RandRange(0, PossibleSpawnLocations.Num() - 1);
-
+	UE_LOG(LogTemp, Warning, TEXT("Node locations NOT found %i"), PossibleSpawnLocations.Num());
 	//Attempt to spawn in the weapon pickup and write a warning to the log if it was unable to spawn it in.
 	if (APickup* WeaponPickup = GetWorld()->SpawnActor<APickup>(WeaponPickupClass,
 		PossibleSpawnLocations[RandomIndex] + FVector(0.0f, 0.0f, 50.0f), FRotator::ZeroRotator))
@@ -102,8 +71,7 @@ void APickupManager::SpawnMysteryBoxPickup()
 {	
 	//Check for existance of Nodes on map
 	//And limit no. of Mystery Boxes to no. of Characters 
-
-	if (PossibleSpawnLocations.IsValidIndex(0) && GetNumberOfMysteryBoxes() < GetNumberOfCharacters())
+	if (PossibleSpawnLocations.Num() > 0 && (GetNumberOfMysteryBoxes() < GetNumberOfCharacters()))
 	{
 		//Spawn MysteryBox into the map with zero location and position
 		MysteryBox = GetWorld()->SpawnActor<AMysteryBoxPickup>(MysteryBoxPickupClass, FVector::ZeroVector, FRotator::ZeroRotator);
@@ -113,7 +81,7 @@ void APickupManager::SpawnMysteryBoxPickup()
 		
 		if (GEngine)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, FString::Printf(TEXT("Weapon Pickup Spawned")));
+			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, FString::Printf(TEXT("MysteryBox Pickup Spawned")));
 		}
 		
 	}
@@ -195,7 +163,7 @@ int32 APickupManager::GetNumberOfCharacters()
 	{
 		NumberOfCharacters++;
 	}
-	//UE_LOG(LogTemp, Warning, TEXT("No of Characters, %i"), NumberOfCharacters);
+	UE_LOG(LogTemp, Warning, TEXT("No of Characters, %i"), NumberOfCharacters);
 	return NumberOfCharacters;
 }
 
@@ -206,7 +174,7 @@ int32 APickupManager::GetNumberOfMysteryBoxes()
 	{
 		NumberOfMysteryBoxes++;
 	}
-	//UE_LOG(LogTemp, Warning, TEXT("No of Boxes, %i"), NumberOfMysteryBoxes);
+	UE_LOG(LogTemp, Warning, TEXT("No of Boxes, %i"), NumberOfMysteryBoxes);
 	return NumberOfMysteryBoxes;
 }
 

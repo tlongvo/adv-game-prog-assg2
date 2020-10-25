@@ -8,24 +8,19 @@
 #include "PlayerCharacter.h"
 #include "TimerManager.h"
 #include "PlayerHUD.h"
+#include "NavigationNode.h"
 
 void AMultiplayerGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessages)
 {
 	Super::InitGame(MapName, Options, ErrorMessages);
 
-	//Find the procedurally generated map in the world
-	for (TActorIterator<AProcedurallyGeneratedMap> It(GetWorld()); It; ++It)
-	{
-		ProceduralMap = *It;
-	}
-
 	//Spawn the pickup manager on the server
 	PickupManager = GetWorld()->SpawnActor<APickupManager>();
 
 	//Initialise the pickup manager variables
-	if (PickupManager && ProceduralMap)
+	if (PickupManager)
 	{
-		PickupManager->Init(ProceduralMap->Vertices, WeaponPickupClass, MysteryBoxPickupClass, 10.0f);
+		PickupManager->Init(GetNodeLocations(), WeaponPickupClass, MysteryBoxPickupClass, 10.0f);
 	}
 	else
 	{
@@ -83,4 +78,36 @@ void AMultiplayerGameMode::TriggerRespawn(AController* Controller)
 			}
 		}
 	}
+}
+
+TArray<FVector> AMultiplayerGameMode::GetNodeLocations() //Return all nodes locations in the map
+{
+	TArray<FVector> NodeLocations;
+
+	//Getting node locations n the Procedural Map
+	for (TActorIterator<AProcedurallyGeneratedMap> It(GetWorld()); It; ++It)
+	{
+		ProceduralMap = *It;
+		if (ProceduralMap)
+		{
+			NodeLocations = ProceduralMap->Vertices;
+		}
+	}
+
+	//If map isn't a procedural map (User created)
+	if (ProceduralMap == nullptr)
+	{
+		ANavigationNode* Node;
+		for (TActorIterator<ANavigationNode> Itr(GetWorld()); Itr; ++Itr)
+		{
+			//Assign the pointer to the NavigationNode pointer to Node 
+			Node = *Itr;
+			if (Node)
+			{
+				//Add to the NodeLocations Array
+				NodeLocations.Add(Node->GetActorLocation());
+			}
+		}
+	}
+	return NodeLocations;
 }
