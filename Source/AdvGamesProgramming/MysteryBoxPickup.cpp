@@ -17,7 +17,6 @@ void AMysteryBoxPickup::OnGenerate() //Call in Blueprint to execute
 {
 	Super::OnGenerate();
 	//Goal: Determine the "Type" of the Mystery Box
-
 	//Initialise Speed Variables
 	SpeedMultiplier = 0.0f;
 	BaseSpeedMultiplier = 0.2f; //Offset to prevent Multplier equating to 1
@@ -26,11 +25,9 @@ void AMysteryBoxPickup::OnGenerate() //Call in Blueprint to execute
 	bHasBeenTouched = false; 
 	HealthAmount = 0;
 
-	//MeshComponent = FindComponentByClass<UStaticMeshComponent>();
-
 	//Randomly select Box type (33% chance per type)
-	int32 RandomPercentageNumber = FMath::RandRange(0, 100);
-
+int32 RandomPercentageNumber = FMath::RandRange(1, 100);
+  
 	if (RandomPercentageNumber <= 33)
 	{
 		Type = MysteryBoxPickupType::HEALTH;
@@ -97,9 +94,12 @@ void AMysteryBoxPickup::OnPickup(AActor* ActorThatPickedUp) //Generates stats/ef
 				FVector DirectionToTarget = ActorThatPickedUp->GetActorForwardVector();
 				Location += (DirectionToTarget * 150);
 
-				//Spawn WeaponPickup
-				WeaponPickup = GetWorld()->SpawnActor<AWeaponPickup>(WeaponPickupClass, Location, FRotator::ZeroRotator);
-				UE_LOG(LogTemp, Warning, TEXT("WeaponPickup Spawned from MysteryBox"));
+				//Spawn WeaponPickup only if Server verion touched it.
+				if (PlayerThatPickedUp->HasAuthority())
+				{
+					WeaponPickup = GetWorld()->SpawnActor<AWeaponPickup>(WeaponPickupClass, Location, FRotator::ZeroRotator);
+					UE_LOG(LogTemp, Warning, TEXT("WeaponPickup Spawned from MysteryBox"));
+				}
 			}
 			else if (Type == MysteryBoxPickupType::SPEED_BOOST)
 			{
@@ -118,7 +118,6 @@ void AMysteryBoxPickup::OnPickup(AActor* ActorThatPickedUp) //Generates stats/ef
 			//Destroy Object after specified time
 			//Needs to be higher than Timer, otherwise Timer won't work (access errors)
 			this->SetLifeSpan(3.1f);
-
 			bHasBeenTouched = true;
 		}
 	}
@@ -126,15 +125,8 @@ void AMysteryBoxPickup::OnPickup(AActor* ActorThatPickedUp) //Generates stats/ef
 
 void AMysteryBoxPickup::ResetSpeed()
 {
-	if (MovementComponent)
-	{
 		//Original Movement Speed
 		PlayerThatPickedUp->SprintEnd(); 
-		//RPC to reset Authority
-		PlayerThatPickedUp->ServerSprintEnd();
-		//UE_LOG(LogTemp, Warning, TEXT("Movement Component is NOT NULL"));
-		
-	}
 }
 
 void AMysteryBoxPickup::MoveBoxDown()
@@ -194,8 +186,16 @@ void AMysteryBoxPickup::GenerateAndSetSpeedMultiplier()
 	float HealthPercentageMissing = 1 - HealthComponent->HealthPercentageRemaining();
 	SpeedMultiplier = BaseSpeedMultiplier + FMath::Pow(MaxSpeedMultiplier, HealthPercentageMissing);
 	//Update Movement Speed
-	//Function includes RPC to update Authority player speed
-	PlayerThatPickedUp->IncreaseSpeed(SpeedMultiplier);
+	if (PlayerThatPickedUp->HasAuthority())
+	{
+		PlayerThatPickedUp->IncreaseSpeed(SpeedMultiplier);
+		//UE_LOG(LogTemp, Warning, TEXT("PLAYER that touched box is AUTHORITY "));
+	}
+	else
+	{
+		PlayerThatPickedUp->IncreaseSpeed(SpeedMultiplier);
+		//UE_LOG(LogTemp, Warning, TEXT("PLAYER that touched box is REMOTE "));
+	}
 
 	//UE_LOG(LogTemp, Warning, TEXT("Speed Boost by: %f"), SpeedMultiplier);
 	if (GEngine)

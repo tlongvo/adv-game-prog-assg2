@@ -42,5 +42,6 @@ private:
 
 	// ------------------- MANAGERS AND MAP -------------------
 	AProcedurallyGeneratedMap* ProceduralMap;
+	TArray<FVector> GetNodeLocations(); //If not Procedurally Generated
 	APickupManager* PickupManager;
 };

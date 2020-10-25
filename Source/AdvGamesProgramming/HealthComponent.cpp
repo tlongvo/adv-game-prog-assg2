@@ -27,8 +27,6 @@ void UHealthComponent::BeginPlay()
 	Super::BeginPlay();
 
 	CurrentHealth = MaxHealth;
-	// ...
-	
 }
 
 
@@ -37,8 +35,9 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	//Health Regen
-	CurrentHealth += 0.0025;
-
+	CurrentHealth += 0.0225;
+	UpdateHealthBar();
+	
 	//Limit Current HP to Max HP 
 	if (CurrentHealth > MaxHealth)
 	{
@@ -73,8 +72,6 @@ void UHealthComponent::OnTakeDamage(float Damage)
 		CurrentHealth = 0;
 		OnDeath();
 	}
-
-	
 }
 
 void UHealthComponent::OnDeath()
@@ -110,17 +107,20 @@ void UHealthComponent::UpdateHealthBar()
 	if (OwningCharacter)
 	{
 		//Update HealthBar HUD on the controller Player's screen.
-		if (OwningCharacter->IsLocallyControlled()) 
+		if (GetOwner()->GetLocalRole() == ROLE_AutonomousProxy || (GetOwnerRole() == ROLE_Authority && Cast<APawn>(GetOwner())->IsLocallyControlled()))
 		{
-			//Find the hud associated to this player
-			APlayerHUD* HUD = Cast<APlayerHUD>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetHUD());
-			if (HUD)
+			//Check if the loaded map has players 
+			if (GetWorld()->GetNumPlayerControllers() > 0)
 			{
-				//Update the progress bar widget on the players hud.
-				HUD->SetPlayerHealthBarPercent(HealthPercentageRemaining());
+				//Find the hud associated to this player
+				APlayerHUD* HUD = Cast<APlayerHUD>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetHUD());
+				if (HUD)
+				{
+					//Update the progress bar widget on the players hud.
+					HUD->SetPlayerHealthBarPercent(HealthPercentageRemaining());
+				}
 			}
+			
 		}
-		
 	}
-	
 }

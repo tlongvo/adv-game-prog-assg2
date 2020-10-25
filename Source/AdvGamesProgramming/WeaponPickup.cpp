@@ -132,4 +132,5 @@ void AWeaponPickup::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(AWeaponPickup, MuzzleVelocity);
 	DOREPLIFETIME(AWeaponPickup, MagazineSize);
 	DOREPLIFETIME(AWeaponPickup, WeaponAccuracy);
+	DOREPLIFETIME(AWeaponPickup, FireRate);
 }

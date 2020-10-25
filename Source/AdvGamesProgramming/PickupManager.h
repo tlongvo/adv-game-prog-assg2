@@ -34,7 +34,6 @@ public:
 	void Init(const TArray<FVector>& SpawnLocations, TSubclassOf<class APickup> WeaponPickup, TSubclassOf<APickup> MysteryBoxPickup, float FrequencyOfSpawn);
 
 	//Custom Functions
-	TArray<FVector> GetNodeLocations();
 	int32 GetNumberOfCharacters(); //Return number of Characters in the world
 	int32 GetNumberOfMysteryBoxes(); //Return number of MysteryBoxes in the world
 
