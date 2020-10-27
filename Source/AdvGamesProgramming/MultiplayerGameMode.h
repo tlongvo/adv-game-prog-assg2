@@ -6,7 +6,9 @@
 #include "GameFramework/GameMode.h"
 #include "ProcedurallyGeneratedMap.h"
 #include "PickupManager.h"
+#include "ClientPlayerState.h"
 #include "MultiplayerGameMode.generated.h"
+
 
 /**
  *

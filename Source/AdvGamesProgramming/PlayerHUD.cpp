@@ -25,6 +25,9 @@ APlayerHUD::APlayerHUD()
 			HealthProgressBar = Cast<UProgressBar>(CurrentPlayerHUDWidget->GetWidgetFromName(TEXT("ProgHealthBar")));
 			
 			AmmoTextBlock = Cast<UTextBlock>(CurrentPlayerHUDWidget->GetWidgetFromName(TEXT("TextAmmo")));
+			
+			KillsTextBlock = Cast<UTextBlock>(CurrentPlayerHUDWidget->GetWidgetFromName(TEXT("TextKills")));
+			DeathsTextBlock = Cast<UTextBlock>(CurrentPlayerHUDWidget->GetWidgetFromName(TEXT("TextDeaths")));
 			/*
 			CrosshairImageBlock = Cast<UImage>(CurrentPlayerHUDWidget->GetWidgetFromName(TEXT("ImgCrosshair")));
 			*/
@@ -48,6 +51,22 @@ void APlayerHUD::SetAmmoText(int32 RoundsRemaining, int32 MagazineSize)
 	}
 }
 
+void APlayerHUD::SetDeathsText(int32 Deaths)
+{
+	if (DeathsTextBlock)
+	{
+		DeathsTextBlock->SetText(FText::FromString(FString::Printf(TEXT("Deaths: %i"), Deaths)));
+	}
+}
+
+void APlayerHUD::SetKillsText(int32 Kills)
+{
+	if (KillsTextBlock)
+	{
+		KillsTextBlock->SetText(FText::FromString(FString::Printf(TEXT("Kills: %i"), Kills)));
+	}
+}
+
 void APlayerHUD::SetHideWidgets(bool bIsHidden)
 {
 	if (bIsHidden)
@@ -60,6 +79,9 @@ void APlayerHUD::SetHideWidgets(bool bIsHidden)
 		
 		if (CrosshairImageBlock)
 			CrosshairImageBlock->SetVisibility(ESlateVisibility::Hidden);
+
+		//if (DeathsTextBlock)
+			//DeathsTextBlock->SetVisibility(ESlateVisibility::Hidden);
 			
 	}
 	else
@@ -78,8 +100,9 @@ void APlayerHUD::SetHideWidgets(bool bIsHidden)
 			AmmoTextBlock->SetVisibility(ESlateVisibility::Visible);
 		if (CrosshairImageBlock)
 			CrosshairImageBlock->SetVisibility(ESlateVisibility::Visible);
+		//if (DeathsTextBlock)
+			//DeathsTextBlock->SetVisibility(ESlateVisibility::Visible);
 		//Hack way. Having Gun C++ class instead of blueprints could fix this issue
-		
 		SetAmmoText(15, 15);
 		SetPlayerHealthBarPercent(1.0f);
 	}

@@ -35,6 +35,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void SetAmmoText(int32 RoundsRemaining, int32 MagazineSize);
 
+	UFUNCTION(BlueprintCallable)
+		void SetKillsText(int32 Kills);
+
+	void SetDeathsText(int32 Deaths);
 
 	/**
 	 * Hides or shows the widgets in the hud.
@@ -42,10 +46,13 @@ public:
 	 */
 	void SetHideWidgets(bool bIsHidden);
 
+	
 private:
 	TSubclassOf<class UUserWidget> PlayerHUDClass;
 	UUserWidget* CurrentPlayerHUDWidget;
 	UProgressBar* HealthProgressBar;
 	UTextBlock* AmmoTextBlock;
+	UTextBlock* KillsTextBlock;
+	UTextBlock* DeathsTextBlock;
 	UImage* CrosshairImageBlock;
 };

@@ -7,6 +7,8 @@
 #include "Engine/World.h"
 #include "Net/UnrealNetwork.h"
 #include "MultiplayerGameMode.h"
+#include "Kismet/GameplayStatics.h"
+#include "ClientPlayerState.h"
 #include "PlayerHUD.h"
 
 // Sets default values
@@ -19,7 +21,6 @@ APlayerCharacter::APlayerCharacter()
 	//bUseControllerRotationPitch = true;
 	LookSensitivity = 1.0f;
 	SprintMultiplier = 1.5f;
-
 	//Set the normal and sprint movement speeds
 	NormalMovementSpeed = GetCharacterMovement()->MaxWalkSpeed;
 	SprintMovementSpeed = GetCharacterMovement()->MaxWalkSpeed * SprintMultiplier;
@@ -42,7 +43,6 @@ void APlayerCharacter::BeginPlay()
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 // Called to bind functionality to input
@@ -115,12 +115,21 @@ void APlayerCharacter::OnDeath()
 	//Then respawn them and pass this info down to the clients 
 	if (GetLocalRole() == ROLE_Authority)
 	{
+		//Update the PlayerState on the Server
+		//Which should get replicated down to clients
+		AClientPlayerState* ClientState = Cast<AClientPlayerState>(GetController()->PlayerState);
+		if (ClientState)
+		{
+			ClientState->DeathCount += 1;
+			
+		}
 		AMultiplayerGameMode* GameMode = Cast<AMultiplayerGameMode>(GetWorld()->GetAuthGameMode());
 		//If gamemode found
 		if (GameMode)
 		{
 			//Respawn Player 
 			GameMode->Respawn(GetController());
+			
 		}
 	}
 }
@@ -146,6 +155,26 @@ void APlayerCharacter::HidePlayerHUD_Implementation(bool bSetHUDVisibility)
 		}
 	}
 }
+
+void APlayerCharacter::UpdatePlayerHUD_Implementation()
+{
+	if (GetLocalRole() == ROLE_AutonomousProxy || (GetLocalRole() == ROLE_Authority && IsLocallyControlled()))
+	{
+		if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+		{
+			if (APlayerHUD* HUD = Cast<APlayerHUD>(PlayerController->GetHUD()))
+			{
+				AClientPlayerState* ClientState = Cast<AClientPlayerState>(GetController()->PlayerState);
+				if (ClientState)
+				{
+					HUD->SetDeathsText(ClientState->DeathCount);
+					//HUD->SetKillsText(1);
+				}
+			}
+		}
+	}
+}
+
 void APlayerCharacter::ServerSprintStart_Implementation()
 {
 	GetCharacterMovement()->MaxWalkSpeed = SprintMovementSpeed;

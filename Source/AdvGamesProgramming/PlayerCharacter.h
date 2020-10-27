@@ -17,6 +17,8 @@ public:
 	// Sets default values for this character's properties
 	APlayerCharacter();
 	UHealthComponent* HealthComponent;
+	UPROPERTY(VisibleAnywhere)
+	TEnumAsByte<ENetRole> LocalRole;
 
 protected:
 	// Called when the game starts or when spawned
@@ -40,6 +42,7 @@ public:
 	void SprintStart();
 	void SprintEnd();
 
+
 	void OnDeath();
 
 	/**
@@ -60,6 +63,10 @@ public:
 	  */
 	UFUNCTION(Client, Reliable)
 		void HidePlayerHUD(bool bSetHUDVisibility);
+
+	//Update Text relevant to PlayerState here.
+	UFUNCTION(Client, Reliable)
+		void UpdatePlayerHUD();
 
 	void IncreaseSpeed(float SpeedMultiplier);
 	//Increase movement speed by specified amount

@@ -63,6 +63,7 @@ void AMultiplayerGameMode::TriggerRespawn(AController* Controller)
 	{
 		//Create the new player pawn
 		AActor* SpawnPoint = ChoosePlayerStart(Controller);
+
 		if (SpawnPoint)
 		{
 			//Spawn and take possession of the new player
@@ -73,6 +74,7 @@ void AMultiplayerGameMode::TriggerRespawn(AController* Controller)
 				if (APlayerCharacter* Character = Cast<APlayerCharacter>(NewPlayerPawn))
 				{
 					UE_LOG(LogTemp, Display, TEXT("Showing the HUD"));
+					Character->UpdatePlayerHUD();
 					Character->HidePlayerHUD(false);
 				}
 			}
