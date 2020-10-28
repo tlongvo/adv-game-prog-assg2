@@ -117,20 +117,24 @@ void APlayerCharacter::OnDeath()
 	{
 		//Update the PlayerState on the Server
 		//Which should get replicated down to clients
-		AClientPlayerState* ClientState = Cast<AClientPlayerState>(GetController()->PlayerState);
-		if (ClientState)
+		if (GetController())
 		{
-			ClientState->DeathCount += 1;
-			
+			AClientPlayerState* ClientState = Cast<AClientPlayerState>(GetController()->PlayerState);
+			if (ClientState)
+			{
+				ClientState->DeathCount += 1;
+
+			}
+			AMultiplayerGameMode* GameMode = Cast<AMultiplayerGameMode>(GetWorld()->GetAuthGameMode());
+			//If gamemode found
+			if (GameMode)
+			{
+				//Respawn Player 
+				GameMode->Respawn(GetController());
+
+			}
 		}
-		AMultiplayerGameMode* GameMode = Cast<AMultiplayerGameMode>(GetWorld()->GetAuthGameMode());
-		//If gamemode found
-		if (GameMode)
-		{
-			//Respawn Player 
-			GameMode->Respawn(GetController());
-			
-		}
+		
 	}
 }
 
@@ -156,7 +160,7 @@ void APlayerCharacter::HidePlayerHUD_Implementation(bool bSetHUDVisibility)
 	}
 }
 
-void APlayerCharacter::UpdatePlayerHUD_Implementation()
+void APlayerCharacter::UpdatePlayerHUD_Implementation() //Really just update Dathcount
 {
 	if (GetLocalRole() == ROLE_AutonomousProxy || (GetLocalRole() == ROLE_Authority && IsLocallyControlled()))
 	{
@@ -173,6 +177,34 @@ void APlayerCharacter::UpdatePlayerHUD_Implementation()
 			}
 		}
 	}
+}
+
+void APlayerCharacter::UpdateKillsHUD_Implementation(int32 ClientKills) //Really just update Dathcount
+{
+	if (GetLocalRole() == ROLE_AutonomousProxy || (GetLocalRole() == ROLE_Authority && IsLocallyControlled()))
+	{
+		if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+		{
+			if (APlayerHUD* HUD = Cast<APlayerHUD>(PlayerController->GetHUD()))
+			{
+				AClientPlayerState* ClientState = Cast<AClientPlayerState>(GetController()->PlayerState);
+				if (ClientState)
+				{
+					UE_LOG(LogTemp, Display, TEXT("CLIENT STATE KILL COUNT ON %i,"), ClientState->KillCount);
+					HUD->SetKillsText(ClientKills);
+				}
+			}
+		}
+	}
+}
+
+AController* APlayerCharacter::GetLocalPlayerController()
+{
+	if (Cast<APawn>(this)->IsLocallyControlled())
+	{
+		return GetController();
+	}
+	return nullptr;
 }
 
 void APlayerCharacter::ServerSprintStart_Implementation()

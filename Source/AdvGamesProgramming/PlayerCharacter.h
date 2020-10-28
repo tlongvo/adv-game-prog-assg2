@@ -67,6 +67,9 @@ public:
 	//Update Text relevant to PlayerState here.
 	UFUNCTION(Client, Reliable)
 		void UpdatePlayerHUD();
+	
+	UFUNCTION(Client, Reliable)
+		void UpdateKillsHUD(int32 ClientKills);
 
 	void IncreaseSpeed(float SpeedMultiplier);
 	//Increase movement speed by specified amount
@@ -74,6 +77,7 @@ public:
 		void ServerIncreaseSpeed(float SpeedMultiplier);
 
 
+	AController* GetLocalPlayerController();
 private:
 	UPROPERTY(EditInstanceOnly)
 	float LookSensitivity;
