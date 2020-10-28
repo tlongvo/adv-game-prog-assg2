@@ -31,24 +31,12 @@ public:
 	UPROPERTY(ReplicatedUsing = UpdateHealthBar, VisibleAnywhere, BlueprintReadOnly)
 	float CurrentHealth;
 
-	UPROPERTY(Replicated)
-	bool bIsDead;
-
 	UFUNCTION(BlueprintCallable)
 	void OnTakeDamage(float Damage, AActor* Attacker);
 
 	UFUNCTION(BlueprintCallable)
-	void OnDeath(AActor* Attacker);
+	void OnDeath();
 	
-	UFUNCTION(BlueprintCallable)
-	void CheckHealth(AActor* Attacker);
-
-	//UPROPERTY(Replicated)
-	AActor* AttackingPlayer; 
-
-	UFUNCTION(Server, Reliable)
-	void ServerSetAttacker(AActor* Attacker);
-
 	float HealthPercentageRemaining();
 
 	void OnTouchHealthBoost(float HealthAmount);
@@ -58,7 +46,4 @@ private:
 		void UpdateHealthBar();
 
 	void UpdateAttackerKillCount(AActor* Attacker);
-
-	
-
 };

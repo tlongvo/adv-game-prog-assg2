@@ -74,7 +74,7 @@ void AMultiplayerGameMode::TriggerRespawn(AController* Controller)
 				if (APlayerCharacter* Character = Cast<APlayerCharacter>(NewPlayerPawn))
 				{
 					UE_LOG(LogTemp, Display, TEXT("Showing the HUD"));
-					Character->UpdatePlayerHUD();
+					Character->UpdateDeathHUD();
 					Character->HidePlayerHUD(false);
 				}
 			}

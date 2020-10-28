@@ -17,9 +17,7 @@ UHealthComponent::UHealthComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 	
 	// ...
-	MaxHealth = 100.0f;
-	bIsDead = false; 
-	
+	MaxHealth = 100.0f; 
 }
 
 
@@ -51,6 +49,7 @@ void UHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::Printf(TEXT("Current Health: %f"), CurrentHealth));
 	}
 	*/
+
 }
 
 void UHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -58,8 +57,6 @@ void UHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	//Replicated CurrentHealth variable
 	DOREPLIFETIME(UHealthComponent, CurrentHealth);
-	//DOREPLIFETIME(UHealthComponent, AttackingPlayer);
-	//DOREPLIFETIME(UHealthComponent, bIsDead);
 }
 
 void UHealthComponent::OnTakeDamage(float Damage, AActor* Attacker) 
@@ -70,55 +67,17 @@ void UHealthComponent::OnTakeDamage(float Damage, AActor* Attacker)
 	if (CurrentHealth <= 0)
 	{
 		CurrentHealth = 0;
+		OnDeath();
+		UpdateAttackerKillCount(Attacker);
 	}
 
 	if (GetOwnerRole() == ROLE_Authority)
 	{
 		UpdateHealthBar();
 	}
-	//If the Attack occured on Server
-	//if attacker is authority then attack occurred on server
-	//so health stuff would be replicated down to the clients here. 
-	/*
-	if (Attacker->GetLocalRole() == ROLE_Authority)
-	{
-		UE_LOG(LogTemp, Display, TEXT("attacker is AUTHORITY"));
-		//Calls in listen servers where Player is also a host (server)
-		if (GetOwnerRole() == ROLE_Authority)
-		{
-			UpdateHealthBar();
-		}
-		CurrentHealth -= Damage;
-		//UE_LOG(LogTemp, Display, TEXT("SERVER VERION  Health %f"), HealthPercentageRemaining());
-		AttackingPlayer = Attacker;
-
-		if (CurrentHealth <= 0)
-		{
-			CurrentHealth = 0;
-			UpdateAttackerKillCount(Attacker);
-			OnDeath(Attacker);
-			
-		}
-	}
-	else if (Attacker->GetLocalRole() == ROLE_AutonomousProxy)
-	{
-		//If victim is dead 
-		UE_LOG(LogTemp, Display, TEXT("attacker IS autonomous proxy Health %f"), HealthPercentageRemaining());
-		CurrentHealth -= Damage; 
-		if (HealthPercentageRemaining() <= 0.0f)
-		{
-			UpdateAttackerKillCount(Attacker);
-		}
-		else
-		{
-			UE_LOG(LogTemp, Display, TEXT("PLAYER IS NOT DEAD"));
-		}
-	}
-	*/
-
 }
 
-void UHealthComponent::OnDeath(AActor* Attacker)
+void UHealthComponent::OnDeath()
 {
 	APlayerCharacter* OwningPlayerCharacter = Cast<APlayerCharacter>(GetOwner());
 	if (OwningPlayerCharacter)
@@ -145,7 +104,7 @@ void UHealthComponent::UpdateHealthBar()
 {
 	//If the owner of this health component is an autonomous proxy
 	//NOTE: Possible to use function GetOwnerRole() as well!
-	//Auto Proxy only works for dedicated servers
+	//Autonomous Proxy only works for dedicated servers
 	//IsLocallyControlled() allows for listen and dedicated servers to work. 
 	APlayerCharacter* OwningCharacter = Cast<APlayerCharacter>(GetOwner()); 
 	if (OwningCharacter)
@@ -164,32 +123,6 @@ void UHealthComponent::UpdateHealthBar()
 	}
 }
 
-void UHealthComponent::CheckHealth(AActor* Attacker)
-{
-	if (Attacker->GetLocalRole() == ROLE_Authority)
-	{
-		if (CurrentHealth <= 0)
-		{
-			UE_LOG(LogTemp, Display, TEXT("attacker IS AUTHORITY Health %f"), HealthPercentageRemaining());
-			UpdateAttackerKillCount(Attacker);
-			OnDeath(Attacker);
-		}
-		
-	}
-	else if (Attacker->GetLocalRole() == ROLE_AutonomousProxy) //If Attack is occur locally, get client (not server)
-	{
-		if (Cast<APlayerCharacter>(Attacker)->IsLocallyControlled())
-		{
-			if (CurrentHealth <= 1)
-			{
-				UE_LOG(LogTemp, Display, TEXT("attacker IS autonomous proxy Health %f"), HealthPercentageRemaining());
-				//UpdateAttackerKillCount(Attacker);
-			}
-		}
-		
-	}
-}
-
 void UHealthComponent::UpdateAttackerKillCount(AActor* Attacker)
 {
 	//Attacker is always an authority when called from fire function in gun blueprint
@@ -197,41 +130,23 @@ void UHealthComponent::UpdateAttackerKillCount(AActor* Attacker)
 	{
 		if (AttackerCharacter->GetLocalRole() == ROLE_Authority)
 		{
-			UE_LOG(LogTemp, Display, TEXT("Attacker is valid authority"));
+			UE_LOG(LogTemp, Display, TEXT("Attacker is authority"));
 			APlayerController* AttackerController = Cast<APlayerController>(AttackerCharacter->GetController());
 			if (AttackerController)
 			{
-				UE_LOG(LogTemp, Display, TEXT("Attacker is valid authority"));
+				UE_LOG(LogTemp, Display, TEXT("Attacker has valid controller"));
 				AClientPlayerState* ClientState = Cast<AClientPlayerState>(AttackerController->PlayerState);
 				if (ClientState)
 				{
-					UE_LOG(LogTemp, Display, TEXT("Client State is Valid"));
-					++ClientState->KillCount;
+					UE_LOG(LogTemp, Display, TEXT("Attacker ClientPlayerState is valid"));
+					//Update KillCount on Authority Version of the Attacking Player
+					ClientState->KillCount++;
+					//Update the HUD of Attacking Player
+					//RPC call to Attacker Client (Non-Authority version) to Update the HUD
 					AttackerCharacter->UpdateKillsHUD(ClientState->KillCount);
-					//Currently Attacker is an authority
-					//so when we call UpdatekillsHUD, it is an rpc to the client to update their HUD
-					//the function should grab the clientstate->killcount 
-					
-					//HUD->SetKillsText(ClientState->KillCount);
 				}
-
-				/*
-				UE_LOG(LogTemp, Display, TEXT("Attacker controller is valid %s"), *AttackerController->GetName());
-				APlayerHUD* HUD = Cast<APlayerHUD>(AttackerController->GetHUD());
-				if (HUD)
-				{
-					UE_LOG(LogTemp, Display, TEXT("GOT HUD"));
-					
-				}
-				*/
 			}
-			
 		}
-		
 	}
-}
-
-void UHealthComponent::ServerSetAttacker_Implementation(AActor* Attacker)
-{
-	AttackingPlayer = Attacker; 
+	
 }

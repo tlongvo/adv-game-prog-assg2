@@ -123,7 +123,6 @@ void APlayerCharacter::OnDeath()
 			if (ClientState)
 			{
 				ClientState->DeathCount += 1;
-
 			}
 			AMultiplayerGameMode* GameMode = Cast<AMultiplayerGameMode>(GetWorld()->GetAuthGameMode());
 			//If gamemode found
@@ -131,10 +130,8 @@ void APlayerCharacter::OnDeath()
 			{
 				//Respawn Player 
 				GameMode->Respawn(GetController());
-
 			}
 		}
-		
 	}
 }
 
@@ -160,7 +157,7 @@ void APlayerCharacter::HidePlayerHUD_Implementation(bool bSetHUDVisibility)
 	}
 }
 
-void APlayerCharacter::UpdatePlayerHUD_Implementation() //Really just update Dathcount
+void APlayerCharacter::UpdateDeathHUD_Implementation() //Really just update Dathcount
 {
 	if (GetLocalRole() == ROLE_AutonomousProxy || (GetLocalRole() == ROLE_Authority && IsLocallyControlled()))
 	{
@@ -172,7 +169,6 @@ void APlayerCharacter::UpdatePlayerHUD_Implementation() //Really just update Dat
 				if (ClientState)
 				{
 					HUD->SetDeathsText(ClientState->DeathCount);
-					//HUD->SetKillsText(1);
 				}
 			}
 		}
@@ -190,7 +186,7 @@ void APlayerCharacter::UpdateKillsHUD_Implementation(int32 ClientKills) //Really
 				AClientPlayerState* ClientState = Cast<AClientPlayerState>(GetController()->PlayerState);
 				if (ClientState)
 				{
-					UE_LOG(LogTemp, Display, TEXT("CLIENT STATE KILL COUNT ON %i,"), ClientState->KillCount);
+					UE_LOG(LogTemp, Display, TEXT("Attacker Kill Count %i,"), ClientState->KillCount);
 					HUD->SetKillsText(ClientKills);
 				}
 			}

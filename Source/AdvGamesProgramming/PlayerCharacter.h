@@ -66,7 +66,7 @@ public:
 
 	//Update Text relevant to PlayerState here.
 	UFUNCTION(Client, Reliable)
-		void UpdatePlayerHUD();
+		void UpdateDeathHUD();
 	
 	UFUNCTION(Client, Reliable)
 		void UpdateKillsHUD(int32 ClientKills);
