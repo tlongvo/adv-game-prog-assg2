@@ -50,7 +50,7 @@ void APickupManager::SpawnWeaponPickup()
 {
 	//Find a random index in the array of spawn locations.
 	int32 RandomIndex = FMath::RandRange(0, PossibleSpawnLocations.Num() - 1);
-	UE_LOG(LogTemp, Warning, TEXT("Node locations NOT found %i"), PossibleSpawnLocations.Num());
+	//UE_LOG(LogTemp, Warning, TEXT("Node locations found %i"), PossibleSpawnLocations.Num());
 	//Attempt to spawn in the weapon pickup and write a warning to the log if it was unable to spawn it in.
 	if (APickup* WeaponPickup = GetWorld()->SpawnActor<APickup>(WeaponPickupClass,
 		PossibleSpawnLocations[RandomIndex] + FVector(0.0f, 0.0f, 50.0f), FRotator::ZeroRotator))

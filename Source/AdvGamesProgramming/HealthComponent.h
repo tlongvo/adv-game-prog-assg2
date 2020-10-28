@@ -25,8 +25,6 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
 	float MaxHealth;
 
@@ -34,11 +32,11 @@ public:
 	float CurrentHealth;
 
 	UFUNCTION(BlueprintCallable)
-	void OnTakeDamage(float Damage);
+	void OnTakeDamage(float Damage, AActor* Attacker);
 
 	UFUNCTION(BlueprintCallable)
 	void OnDeath();
-
+	
 	float HealthPercentageRemaining();
 
 	void OnTouchHealthBoost(float HealthAmount);
@@ -47,4 +45,5 @@ private:
 	UFUNCTION()
 		void UpdateHealthBar();
 
+	void UpdateAttackerKillCount(AActor* Attacker);
 };
