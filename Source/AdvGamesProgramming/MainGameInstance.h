@@ -7,6 +7,7 @@
 #include "Blueprint/UserWidget.h"
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
+#include "Interfaces/OnlineSessionInterface.h"
 #include "MainGameInstance.generated.h"
 
 /**
@@ -21,6 +22,14 @@ public:
 
 	UMainGameInstance(const FObjectInitializer& ObjectInitialize);
 
+	UFUNCTION(BlueprintCallable)
+		void LoadMenu();
+
+	void Init();
+	void CreateSession(FName SessionName);
+	void DestroySession(FName SessionName);
+	void FindSession();
+	void JoinSession();
 
 private:
 
@@ -29,16 +38,10 @@ private:
 
 	IOnlineSubsystem* Subsystem;
 	IOnlineSessionPtr SessionInterface;
-
-	void CreateSession(FName SessionName);
+	TSharedPtr<class FOnlineSessionSearch> SessionSearch;
 
 	void OnCreateSessionComplete(FName SessionName, bool bSuccess);
-
-public:
-
-	UFUNCTION(BlueprintCallable)
-		void LoadMenu();
-
-	void Init();
-
+	void OnDestroySessionComplete(FName SessionName, bool bSuccess);
+	void OnFindSessionComplete(bool bSuccess);
+	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type JoinType);
 };
