@@ -67,8 +67,8 @@ void UHealthComponent::OnTakeDamage(float Damage, AActor* Attacker)
 	if (CurrentHealth <= 0)
 	{
 		CurrentHealth = 0;
-		OnDeath();
-		UpdateAttackerKillCount(Attacker);
+		OnDeath(Attacker);
+		
 	}
 
 	if (GetOwnerRole() == ROLE_Authority)
@@ -77,12 +77,14 @@ void UHealthComponent::OnTakeDamage(float Damage, AActor* Attacker)
 	}
 }
 
-void UHealthComponent::OnDeath()
+void UHealthComponent::OnDeath(AActor* Attacker)
 {
 	APlayerCharacter* OwningPlayerCharacter = Cast<APlayerCharacter>(GetOwner());
 	if (OwningPlayerCharacter)
 	{
+		OwningPlayerCharacter->UpdateAttackerKillCount(Attacker);
 		OwningPlayerCharacter->OnDeath();
+		
 	}
 }
 
@@ -121,32 +123,4 @@ void UHealthComponent::UpdateHealthBar()
 			}
 		}
 	}
-}
-
-void UHealthComponent::UpdateAttackerKillCount(AActor* Attacker)
-{
-	//Attacker is always an authority when called from fire function in gun blueprint
-	if (APlayerCharacter* AttackerCharacter = Cast<APlayerCharacter>(Attacker))
-	{
-		if (AttackerCharacter->GetLocalRole() == ROLE_Authority)
-		{
-			UE_LOG(LogTemp, Display, TEXT("Attacker is authority"));
-			APlayerController* AttackerController = Cast<APlayerController>(AttackerCharacter->GetController());
-			if (AttackerController)
-			{
-				UE_LOG(LogTemp, Display, TEXT("Attacker has valid controller"));
-				AClientPlayerState* ClientState = Cast<AClientPlayerState>(AttackerController->PlayerState);
-				if (ClientState)
-				{
-					UE_LOG(LogTemp, Display, TEXT("Attacker ClientPlayerState is valid"));
-					//Update KillCount on Authority Version of the Attacking Player
-					ClientState->KillCount++;
-					//Update the HUD of Attacking Player
-					//RPC call to Attacker Client (Non-Authority version) to Update the HUD
-					AttackerCharacter->UpdateKillsHUD(ClientState->KillCount);
-				}
-			}
-		}
-	}
-	
 }

@@ -20,6 +20,6 @@ public:
 
 	UPROPERTY(Replicated, BlueprintReadWrite)
 	int32 KillCount;
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, BlueprintReadOnly)
 	int32 DeathCount; 
 };

@@ -35,7 +35,7 @@ public:
 	void OnTakeDamage(float Damage, AActor* Attacker);
 
 	UFUNCTION(BlueprintCallable)
-	void OnDeath();
+	void OnDeath(AActor* Attacker);
 	
 	float HealthPercentageRemaining();
 
@@ -44,6 +44,4 @@ public:
 private:
 	UFUNCTION()
 		void UpdateHealthBar();
-
-	void UpdateAttackerKillCount(AActor* Attacker);
 };
