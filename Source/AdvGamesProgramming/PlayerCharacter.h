@@ -76,8 +76,8 @@ public:
 	UFUNCTION(Server, Reliable)
 		void ServerIncreaseSpeed(float SpeedMultiplier);
 
-
-	AController* GetLocalPlayerController();
+	//Upate Player State information regarding kill count
+	void UpdateAttackerKillCount(AActor* Attacker);
 private:
 	UPROPERTY(EditInstanceOnly)
 	float LookSensitivity;

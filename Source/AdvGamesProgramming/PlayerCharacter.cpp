@@ -157,7 +157,7 @@ void APlayerCharacter::HidePlayerHUD_Implementation(bool bSetHUDVisibility)
 	}
 }
 
-void APlayerCharacter::UpdateDeathHUD_Implementation() //Really just update Dathcount
+void APlayerCharacter::UpdateDeathHUD_Implementation() //Really just update Deathcount
 {
 	if (GetLocalRole() == ROLE_AutonomousProxy || (GetLocalRole() == ROLE_Authority && IsLocallyControlled()))
 	{
@@ -175,7 +175,7 @@ void APlayerCharacter::UpdateDeathHUD_Implementation() //Really just update Dath
 	}
 }
 
-void APlayerCharacter::UpdateKillsHUD_Implementation(int32 ClientKills) //Really just update Dathcount
+void APlayerCharacter::UpdateKillsHUD_Implementation(int32 ClientKills) 
 {
 	if (GetLocalRole() == ROLE_AutonomousProxy || (GetLocalRole() == ROLE_Authority && IsLocallyControlled()))
 	{
@@ -194,15 +194,6 @@ void APlayerCharacter::UpdateKillsHUD_Implementation(int32 ClientKills) //Really
 	}
 }
 
-AController* APlayerCharacter::GetLocalPlayerController()
-{
-	if (Cast<APawn>(this)->IsLocallyControlled())
-	{
-		return GetController();
-	}
-	return nullptr;
-}
-
 void APlayerCharacter::ServerSprintStart_Implementation()
 {
 	GetCharacterMovement()->MaxWalkSpeed = SprintMovementSpeed;
@@ -216,4 +207,32 @@ void APlayerCharacter::ServerSprintEnd_Implementation()
 void APlayerCharacter::ServerIncreaseSpeed_Implementation(float SpeedMultiplier)
 {
 	GetCharacterMovement()->MaxWalkSpeed *= SpeedMultiplier;
+}
+
+void APlayerCharacter::UpdateAttackerKillCount(AActor* Attacker)
+{
+	//Attacker is always an authority when called from fire function in gun blueprint
+	if (APlayerCharacter* AttackerCharacter = Cast<APlayerCharacter>(Attacker))
+	{
+		if (AttackerCharacter->GetLocalRole() == ROLE_Authority)
+		{
+			UE_LOG(LogTemp, Display, TEXT("Attacker is authority"));
+			APlayerController* AttackerController = Cast<APlayerController>(AttackerCharacter->GetController());
+			if (AttackerController)
+			{
+				UE_LOG(LogTemp, Display, TEXT("Attacker has valid controller"));
+				AClientPlayerState* ClientState = Cast<AClientPlayerState>(AttackerController->PlayerState);
+				if (ClientState)
+				{
+					UE_LOG(LogTemp, Display, TEXT("Attacker ClientPlayerState is valid"));
+					//Update KillCount on Authority Version of the Attacking Player
+					ClientState->KillCount++;
+					//Update the HUD of Attacking Player
+					//RPC call to Attacker Client (Non-Authority version) to Update the HUD
+					AttackerCharacter->UpdateKillsHUD(ClientState->KillCount);
+				}
+			}
+		}
+	}
+
 }
