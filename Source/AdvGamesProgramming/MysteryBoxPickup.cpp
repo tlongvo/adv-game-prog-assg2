@@ -11,22 +11,23 @@ AMysteryBoxPickup::AMysteryBoxPickup()
 	//WeaponMaterial = CreateDefaultSubobject<UMaterial>(TEXT("WeaponMaterial"));
 	//HealthMaterial = CreateDefaultSubobject<UMaterial>(TEXT("HealthMaterial"));
 	//BoostMaterial = CreateDefaultSubobject<UMaterial>(TEXT("BoostMaterial"));
+
+	//Initialise Speed Variables
+	SpeedMultiplier = 0.0f;
+	BaseSpeedMultiplier = 0.2f; //Offset to prevent Multiplier equating to 1
+	MaxSpeedMultiplier = 5.0f;
+
+	bHasBeenTouched = false;
+	HealthAmount = 0;
 }
 
 void AMysteryBoxPickup::OnGenerate() //Call in Blueprint to execute
 {
 	Super::OnGenerate();
 	//Goal: Determine the "Type" of the Mystery Box
-	//Initialise Speed Variables
-	SpeedMultiplier = 0.0f;
-	BaseSpeedMultiplier = 0.2f; //Offset to prevent Multplier equating to 1
-	MaxSpeedMultiplier = 5.0f; 
-
-	bHasBeenTouched = false; 
-	HealthAmount = 0;
 
 	//Randomly select Box type (33% chance per type)
-int32 RandomPercentageNumber = FMath::RandRange(1, 100);
+	int32 RandomPercentageNumber = FMath::RandRange(1, 100);
   
 	if (RandomPercentageNumber <= 33)
 	{
@@ -51,13 +52,16 @@ void AMysteryBoxPickup::OnPickup(AActor* ActorThatPickedUp) //Generates stats/ef
 	* If "Gun" --> Produce a Weapon pickup
 	*/
 	//Initilise Mesh component
-	MeshComponent = FindComponentByClass<UStaticMeshComponent>();
+	//MeshComponent = FindComponentByClass<UStaticMeshComponent>();
+	//Get Destructible Component
+	DestructibleComponent = FindComponentByClass<UDestructibleComponent>();
 
+	//Permit PlayerCharacter to touch box
+	//Cast Actor to PlayerCharacter to attain a PlayerCharacter type pointer
 	if (Cast<APlayerCharacter>(ActorThatPickedUp))
 	{
 		//Initilise Variables associated with Actor that picked up the MysteryBox
-		//Cast Actor to PlayerCharacter to attain a PlayerCharacter type pointer
-		PlayerThatPickedUp = Cast<APlayerCharacter>(ActorThatPickedUp);
+		PlayerThatPickedUp = Cast<APlayerCharacter>(ActorThatPickedUp); //Don't Assign outside the if statement, otherwise it can return null
 		MovementComponent = PlayerThatPickedUp->FindComponentByClass<UCharacterMovementComponent>();
 		HealthComponent = PlayerThatPickedUp->FindComponentByClass<UHealthComponent>();
 
@@ -70,31 +74,32 @@ void AMysteryBoxPickup::OnPickup(AActor* ActorThatPickedUp) //Generates stats/ef
 			//Apply effect of selected box type
 			if (Type == MysteryBoxPickupType::HEALTH)
 			{
-				if (PlayerThatPickedUp) {
-					//Access Health Component
-					if (HealthComponent && HealthMaterial)
-					{
-						//Change MysteryBox material to respective Health Material (Green)
-						//Execute Health Recovery function
-						MeshComponent->SetMaterial(0, HealthMaterial);
-						//Generate Health amount and update Player Health
-						GenerateAndSetHealthAmount(HealthComponent);
-					}
+				//Access Health Component
+				if (HealthComponent && HealthMaterial && DestructibleComponent)
+				{
+					//Change MysteryBox material to respective Health Material (Green)
+					//Execute Health Recovery function
+					//MeshComponent->SetMaterial(0, HealthMaterial);
+					DestructibleComponent->SetMaterial(0, HealthMaterial);
+					//Generate Health amount and update Player Health
+					GenerateAndSetHealthAmount(HealthComponent);
 				}
 			}
 			else if (Type == MysteryBoxPickupType::WEAPON)
 			{
-				if (MeshComponent && WeaponMaterial)
+				if (WeaponMaterial && DestructibleComponent)
 				{
 					//Change MysteryBox to WeaponMaterial(M_FPGun)
-					MeshComponent->SetMaterial(0, WeaponMaterial);
+					//MeshComponent->SetMaterial(0, WeaponMaterial);
+					DestructibleComponent->SetMaterial(0, WeaponMaterial);
 				}
 				//Get Position in front of Actor (Mystery Box)
 				FVector Location = GetActorLocation();
 				FVector DirectionToTarget = ActorThatPickedUp->GetActorForwardVector();
 				Location += (DirectionToTarget * 150);
 
-				//Spawn WeaponPickup only if Server verion touched it.
+				//Spawn WeaponPickup only if Server version touched it.
+				//Prevents double spawning due to autonomous proxy
 				if (PlayerThatPickedUp->HasAuthority())
 				{
 					WeaponPickup = GetWorld()->SpawnActor<AWeaponPickup>(WeaponPickupClass, Location, FRotator::ZeroRotator);
@@ -103,16 +108,15 @@ void AMysteryBoxPickup::OnPickup(AActor* ActorThatPickedUp) //Generates stats/ef
 			}
 			else if (Type == MysteryBoxPickupType::SPEED_BOOST)
 			{
-				if (PlayerThatPickedUp) {
-					//Access Movement Component
-					if (MovementComponent && BoostMaterial)
-					{
-						//Change MysteryBox material to respective Speed Material (Yellow)
-						MeshComponent->SetMaterial(0, BoostMaterial);
+				//Access Movement Component
+				if (MovementComponent && BoostMaterial && DestructibleComponent)
+				{
+					//Change MysteryBox material to respective Speed Material (Yellow)
+					//MeshComponent->SetMaterial(0, BoostMaterial);
+					DestructibleComponent->SetMaterial(0, BoostMaterial);
 
-						//Generate Speed Multiplier value and update Player Movement Speed
-						GenerateAndSetSpeedMultiplier();
-					}
+					//Generate Speed Multiplier value and update Player Movement Speed
+					GenerateAndSetSpeedMultiplier();
 				}
 			}
 			//Destroy Object after specified time
@@ -125,8 +129,17 @@ void AMysteryBoxPickup::OnPickup(AActor* ActorThatPickedUp) //Generates stats/ef
 
 void AMysteryBoxPickup::ResetSpeed()
 {
-		//Original Movement Speed
-		PlayerThatPickedUp->SprintEnd(); 
+	//Return to Player's original movement speed
+
+	if (PlayerThatPickedUp)
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Green, FString::Printf(TEXT("Reset Movement Speed")));
+		}
+		Cast<APlayerCharacter>(MovementComponent->GetOwner())->SprintEnd();
+	}
+
 }
 
 void AMysteryBoxPickup::MoveBoxDown()
@@ -185,23 +198,31 @@ void AMysteryBoxPickup::GenerateAndSetSpeedMultiplier()
 	*/
 	float HealthPercentageMissing = 1 - HealthComponent->HealthPercentageRemaining();
 	SpeedMultiplier = BaseSpeedMultiplier + FMath::Pow(MaxSpeedMultiplier, HealthPercentageMissing);
-	//Update Movement Speed
-	if (PlayerThatPickedUp->HasAuthority())
+	
+	/** Increase movement for locally controlled player
+	* Need to consider listen server host (Player that hosts)
+	* Check for Authority that is controlled
+	* Check for Autonomous Proxy
+	*/
+	if (PlayerThatPickedUp->GetLocalRole() == ROLE_Authority && PlayerThatPickedUp->IsLocallyControlled())
 	{
 		PlayerThatPickedUp->IncreaseSpeed(SpeedMultiplier);
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Yellow, FString::Printf(TEXT("Speed Boost for Authority: %f"), SpeedMultiplier));
+		}
 		//UE_LOG(LogTemp, Warning, TEXT("PLAYER that touched box is AUTHORITY "));
 	}
-	else
+	else if (PlayerThatPickedUp->GetLocalRole() == ROLE_AutonomousProxy)
 	{
 		PlayerThatPickedUp->IncreaseSpeed(SpeedMultiplier);
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Yellow, FString::Printf(TEXT("Speed Boost for Autonomous: %f"), SpeedMultiplier));
+		}
 		//UE_LOG(LogTemp, Warning, TEXT("PLAYER that touched box is REMOTE "));
 	}
 
-	//UE_LOG(LogTemp, Warning, TEXT("Speed Boost by: %f"), SpeedMultiplier);
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Yellow, FString::Printf(TEXT("Speed Boost: %f"), SpeedMultiplier));
-	}
 	//Reset movement speed after 3 seconds
 	GetWorld()->GetTimerManager().SetTimer(SecondHandle, this, &AMysteryBoxPickup::ResetSpeed, 3.0f, false);
 }
@@ -210,5 +231,4 @@ void AMysteryBoxPickup::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AMysteryBoxPickup, Type);
-	
 }
