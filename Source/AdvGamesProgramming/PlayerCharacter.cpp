@@ -138,7 +138,7 @@ void APlayerCharacter::OnDeath()
 void APlayerCharacter::IncreaseSpeed(float SpeedMultiplier)
 {
 	GetCharacterMovement()->MaxWalkSpeed *= SpeedMultiplier;
-	//ServerIncreaseSpeed(SpeedMultiplier);
+	ServerIncreaseSpeed(SpeedMultiplier);
 }
 
 void APlayerCharacter::HidePlayerHUD_Implementation(bool bSetHUDVisibility)

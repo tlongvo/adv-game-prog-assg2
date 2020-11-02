@@ -8,6 +8,7 @@
 #include "PlayerCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "HealthComponent.h"
+#include "DestructibleComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "MysteryBoxPickup.generated.h"
 
@@ -52,7 +53,8 @@ public:
 	UHealthComponent* HealthComponent;
 
 	//Utility variables
-	UStaticMeshComponent* MeshComponent;
+	//UStaticMeshComponent* MeshComponent;
+	UDestructibleComponent* DestructibleComponent;
 	APlayerCharacter* PlayerThatPickedUp;
 	UCharacterMovementComponent* MovementComponent;
 	AWeaponPickup* WeaponPickup;

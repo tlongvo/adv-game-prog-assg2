@@ -7,7 +7,9 @@
 #include "ProcedurallyGeneratedMap.h"
 #include "PickupManager.h"
 #include "ClientPlayerState.h"
+#include "DestructibleActor.h"
 #include "MultiplayerGameMode.generated.h"
+
 
 
 /**
@@ -26,6 +28,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 		TSubclassOf<APickup> MysteryBoxPickupClass;
+
+	UPROPERTY(EditDefaultsOnly)
+		TSubclassOf<AActor> DestructibleActorClass; 
 
 	// -------------------- RESPAWN FUNCTIONS --------------------
 	/**
