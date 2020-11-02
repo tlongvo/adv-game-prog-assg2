@@ -9,6 +9,7 @@
 #include "NavigationNode.h"
 #include "TimerManager.h"
 #include "MysteryBoxPickup.h"
+#include "DestructibleActor.h"
 #include "PickupManager.generated.h"
 
 UCLASS()
@@ -30,8 +31,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	//From Lab
-	void Init(const TArray<FVector>& SpawnLocations, TSubclassOf<class APickup> WeaponPickup, TSubclassOf<APickup> MysteryBoxPickup, float FrequencyOfSpawn);
+	//From Lab to intialise the references to the Pickups' and Actor's blueprints for spawning
+	void Init(const TArray<FVector>& SpawnLocations, TSubclassOf<class APickup> WeaponPickup, TSubclassOf<APickup> MysteryBoxPickup,
+		TSubclassOf<AActor> DestructibleObject, float FrequencyOfSpawn);
 
 	//Custom Functions
 	int32 GetNumberOfCharacters(); //Return number of Characters in the world
@@ -50,13 +52,19 @@ private:
 	ANavigationNode* Node;
 	FTimerHandle MysteryBoxSpawnTimer;
 
-	//Delay in seconds between spawns of Mystery Boxes, Editable within editor
+	//DestructibleObject variables
+	TSubclassOf<AActor> DestructibleObjectClass;
+	FTimerHandle DestructibleObjectTimer; 
+
+	//Delay in seconds betweens for timer call
 	UPROPERTY(EditAnywhere)
-	float FrequencyOfMysteryBoxSpawns;
+		float FrequencyOfMysteryBoxSpawns;
+	float FrequencyOfDestructibleObjectSpawns;
 	
 	
 	//Functions
 	void SpawnMysteryBoxPickup();
+	void SpawnDestructibleObject();
 	FVector GenerateLocation(); //Generate Location of MysteryBoxPickup based on it's Type
 
 	/** Generate an array that sorts the given array by specified order

@@ -20,7 +20,7 @@ void AMultiplayerGameMode::InitGame(const FString& MapName, const FString& Optio
 	//Initialise the pickup manager variables
 	if (PickupManager)
 	{
-		PickupManager->Init(GetNodeLocations(), WeaponPickupClass, MysteryBoxPickupClass, 10.0f);
+		PickupManager->Init(GetNodeLocations(), WeaponPickupClass, MysteryBoxPickupClass, DestructibleActorClass, 10.0f);
 	}
 	else
 	{

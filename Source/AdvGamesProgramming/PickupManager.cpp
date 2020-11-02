@@ -13,6 +13,7 @@ APickupManager::APickupManager()
 	PrimaryActorTick.bCanEverTick = true;
 
 	FrequencyOfMysteryBoxSpawns = 3.0f; //3 second delay between spawns 
+	FrequencyOfDestructibleObjectSpawns = 15.0f; 
 }
 
 // Called when the game starts or when spawned
@@ -30,6 +31,8 @@ void APickupManager::BeginPlay()
 
 	//Spawn WeaponPickup every "FrequencyOfWeaponPickupSpawns" seconds
 	GetWorldTimerManager().SetTimer(WeaponSpawnTimer, this, &APickupManager::SpawnWeaponPickup, FrequencyOfWeaponPickupSpawns, true, 0.0f);
+
+	GetWorldTimerManager().SetTimer(DestructibleObjectTimer, this, &APickupManager::SpawnDestructibleObject, FrequencyOfDestructibleObjectSpawns, true, 0.0f);
 }
 
 // Called every frame
@@ -38,12 +41,14 @@ void APickupManager::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void APickupManager::Init(const TArray<FVector>& SpawnLocations, TSubclassOf<APickup> WeaponPickup, TSubclassOf<APickup> MysteryBoxPickup, float FrequencyOfSpawn)
+void APickupManager::Init(const TArray<FVector>& SpawnLocations, TSubclassOf<APickup> WeaponPickup, TSubclassOf<APickup> MysteryBoxPickup,
+	TSubclassOf<AActor> DestructibleObject, float FrequencyOfSpawn)
 {
 	PossibleSpawnLocations = SpawnLocations;
 	WeaponPickupClass = WeaponPickup;
 	FrequencyOfWeaponPickupSpawns = FrequencyOfSpawn;
 	MysteryBoxPickupClass = MysteryBoxPickup;
+	DestructibleObjectClass = DestructibleObject; 
 }
 
 void APickupManager::SpawnWeaponPickup()
@@ -89,7 +94,23 @@ void APickupManager::SpawnMysteryBoxPickup()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Unable to Spawn MysteryBox "));
 	}
-	
+}
+
+void APickupManager::SpawnDestructibleObject()
+{
+	int32 RandomIndex = FMath::RandRange(0, PossibleSpawnLocations.Num() - 1);
+
+	//Spawn object slightly above ground
+	AActor* DestructibleObject = GetWorld()->SpawnActor<AActor>(DestructibleObjectClass,
+		PossibleSpawnLocations[RandomIndex] + FVector(0.0f, 0.0f, 200.0f), FRotator::ZeroRotator);
+	if (DestructibleObject)
+	{
+		DestructibleObject->SetLifeSpan(30.0f);
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, FString::Printf(TEXT("Destructible Spawned")));
+		}
+	}
 }
 
 FVector APickupManager::GenerateLocation()
