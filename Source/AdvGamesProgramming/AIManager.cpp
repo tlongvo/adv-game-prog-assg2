@@ -106,7 +106,9 @@ void AAIManager::CreateAgents()
 	for (int32 i = 0; i < NumAI; i++)
 	{
 		int32 RandIndex = FMath::RandRange(0, AllNodes.Num()-1);
-		AEnemyCharacter* Agent = GetWorld()->SpawnActor<AEnemyCharacter>(AgentToSpawn, AllNodes[RandIndex]->GetActorLocation(), FRotator(0.f, 0.f, 0.f));
+		//Height spawn offset to prevent spawn inside ground.
+		AEnemyCharacter* Agent = GetWorld()->SpawnActor<AEnemyCharacter>(AgentToSpawn, 
+			AllNodes[RandIndex]->GetActorLocation() + FVector(0.0f,0.0f, 500.0f), FRotator(0.f, 0.f, 0.f));
 		Agent->Manager = this;
 		Agent->CurrentNode = AllNodes[RandIndex];
 		AllAgents.Add(Agent);

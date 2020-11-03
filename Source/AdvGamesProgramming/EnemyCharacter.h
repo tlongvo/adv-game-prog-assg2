@@ -9,6 +9,7 @@
 #include "HealthComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Perception/AIPerceptionComponent.h"
+#include "PlayerCharacter.h"
 #include "EnemyCharacter.generated.h"
 
 UENUM()

@@ -49,117 +49,120 @@ void AEnemyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime); 
 
-	//Fire(FVector::ZeroVector);
-	if (CurrentAgentState == AgentState::PATROL)
+	//Only Authority version can hold true behaviour
+	if (GetLocalRole() == ROLE_Authority)
 	{
-		AgentPatrol();
-		//If enemy can see player and has more than 40% hp, change to ENGAGE 
-		if (bCanSeeActor && this->HealthComponent->HealthPercentageRemaining() >= 0.4 )
+		if (CurrentAgentState == AgentState::PATROL)
 		{
-			CurrentAgentState = AgentState::ENGAGE;
-			Path.Empty();
+			AgentPatrol();
+			//If enemy can see player and has more than 40% hp, change to ENGAGE 
+			if (bCanSeeActor && this->HealthComponent->HealthPercentageRemaining() >= 0.4)
+			{
+				CurrentAgentState = AgentState::ENGAGE;
+				Path.Empty();
+			}
+			//If enemy senses a hurt teammate, and itself is not below 40% hp, change to FOLLOW
+			else if (bCanSeeTeammate && TeammateHealthComponent->HealthPercentageRemaining() < 0.4
+				&& HealthComponent->HealthPercentageRemaining() >= 0.4)
+			{
+				//UE_LOG(LogTemp, Error, TEXT("FOLLOWING FROM PATROL STATE"));
+				bCanFollowTeammate = true;
+				CurrentAgentState = AgentState::FOLLOW;
+				Path.Empty();
+			}
+			//If can't see enemy but can see Teammate engaging with enemy, go to Teammate if >= 40% hp
+			else if (!bCanSeeActor && bCanSeeTeammate && TeammateCharacter->CurrentAgentState == AgentState::ENGAGE
+				&& HealthComponent->HealthPercentageRemaining() >= 0.4)
+			{
+				//UE_LOG(LogTemp, Warning, TEXT("Helping Teammate %s"), *TeammateCharacter->GetName());
+				CurrentAgentState = AgentState::FOLLOW;
+			}
+			else if (bCanSeeActor && this->HealthComponent->HealthPercentageRemaining() < 0.4)
+			{
+				CurrentAgentState = AgentState::EVADE;
+				Path.Empty();
+			}
+
+			MoveAlongPath();
 		}
-		//If enemy senses a hurt teammate, and itself is not below 40% hp, change to FOLLOW
-		else if (bCanSeeTeammate && TeammateHealthComponent->HealthPercentageRemaining() < 0.4
-			&& HealthComponent->HealthPercentageRemaining() >= 0.4)
+		else if (CurrentAgentState == AgentState::ENGAGE)
 		{
-			//UE_LOG(LogTemp, Error, TEXT("FOLLOWING FROM PATROL STATE"));
-			bCanFollowTeammate = true; 
-			CurrentAgentState = AgentState::FOLLOW;
-			Path.Empty();
+			AgentEngage();
+			if (!bCanSeeActor)
+			{
+				CurrentAgentState = AgentState::PATROL;
+			}
+			//If enemy sees teammate less than 40% hp, and itself is healthy, follow teammate 
+			else if (bCanSeeTeammate && TeammateHealthComponent->HealthPercentageRemaining() < 0.4
+				&& HealthComponent->HealthPercentageRemaining() >= 0.4)
+			{
+				bCanFollowTeammate = true;
+				CurrentAgentState = AgentState::FOLLOW;
+				Path.Empty();
+			}
+			else if (bCanSeeActor && HealthComponent->HealthPercentageRemaining() < 0.4)
+			{
+				CurrentAgentState = AgentState::EVADE;
+				Path.Empty();
+			}
+			MoveAlongPath();
 		}
-		//If can't see enemy but can see Teammate engaging with enemy, go to Teammate if >= 40% hp
-		else if (!bCanSeeActor && bCanSeeTeammate && TeammateCharacter->CurrentAgentState == AgentState::ENGAGE
-			&& HealthComponent->HealthPercentageRemaining() >= 0.4)
+		else if (CurrentAgentState == AgentState::EVADE)
 		{
-			//UE_LOG(LogTemp, Warning, TEXT("Helping Teammate %s"), *TeammateCharacter->GetName());
-			CurrentAgentState = AgentState::FOLLOW;
+			AgentEvade();
+			if (!bCanSeeActor)
+			{
+				CurrentAgentState = AgentState::PATROL;
+			}
+			else if (bCanSeeActor && HealthComponent->HealthPercentageRemaining() >= 0.4)
+			{
+				CurrentAgentState = AgentState::ENGAGE;
+				Path.Empty();
+			}
+			MoveAlongPath();
 		}
-		else if (bCanSeeActor && this->HealthComponent->HealthPercentageRemaining() < 0.4)
+		else if (CurrentAgentState == AgentState::FOLLOW)
 		{
-			CurrentAgentState = AgentState::EVADE;
-			Path.Empty();
-		}
-		
-		MoveAlongPath();
-	}
-	else if (CurrentAgentState == AgentState::ENGAGE)
-	{
-		AgentEngage();
-		if (!bCanSeeActor)
-		{
-			CurrentAgentState = AgentState::PATROL;
-		}
-		//If enemy sees teammate less than 40% hp, and itself is healthy, follow teammate 
-		else if (bCanSeeTeammate && TeammateHealthComponent->HealthPercentageRemaining() < 0.4 
-			&& HealthComponent->HealthPercentageRemaining() >= 0.4)
-		{
-			bCanFollowTeammate = true; 
-			CurrentAgentState = AgentState::FOLLOW;
-			Path.Empty();
-		}
-		else if (bCanSeeActor && HealthComponent->HealthPercentageRemaining() < 0.4)
-		{
-			CurrentAgentState = AgentState::EVADE;
-			Path.Empty();
-		}
-		MoveAlongPath();
-	}
-	else if (CurrentAgentState == AgentState::EVADE)
-	{
-		AgentEvade();
-		if (!bCanSeeActor)
-		{
-			CurrentAgentState = AgentState::PATROL;
-		}
-		else if (bCanSeeActor && HealthComponent->HealthPercentageRemaining() >= 0.4)
-		{
-			CurrentAgentState = AgentState::ENGAGE;
-			Path.Empty();
-		}
-		MoveAlongPath();
-	}
-	else if (CurrentAgentState == AgentState::FOLLOW)
-	{
-		AgentFollow();
-		//ALL: Reset Movement speed back to 600.0f;
-		//UE_LOG(LogTemp, Error, TEXT("FOLLOWING STATE"));
-		//If healthy & can see the Player and Teammate is recovered, change to ENGAGE
-		if (bCanSeeActor && HealthComponent->HealthPercentageRemaining() >= 0.4
-			&& TeammateHealthComponent->HealthPercentageRemaining() >= 0.4)
-		{
-			bCanFollowTeammate = false;
-			CurrentAgentState = AgentState::ENGAGE;
-			Path.Empty();
-			MovementComponent->MaxWalkSpeed = 600.0f;
-		}
-		//If teammate is recovered, change to PATROL
-		//Exclude: if can't see teammate; NOTE: It shouldn't lose sight while following teammate.
-		else if((bCanSeeTeammate && TeammateHealthComponent->HealthPercentageRemaining() >= 0.4))
-		{			
-			bCanFollowTeammate = false; 
-			CurrentAgentState = AgentState::PATROL;
-			MovementComponent->MaxWalkSpeed = 600.0f;
-		}
-		//If injured and can see the Player, change to EVADE
-		else if (bCanSeeActor && HealthComponent->HealthPercentageRemaining() < 0.4)
-		{
-			bCanFollowTeammate = false;
-			CurrentAgentState = AgentState::EVADE; 
-			Path.Empty();
-			MovementComponent->MaxWalkSpeed = 600.0f;
+			AgentFollow();
+			//ALL: Reset Movement speed back to 600.0f;
+			//UE_LOG(LogTemp, Error, TEXT("FOLLOWING STATE"));
+			//If healthy & can see the Player and Teammate is recovered, change to ENGAGE
+			if (bCanSeeActor && HealthComponent->HealthPercentageRemaining() >= 0.4
+				&& TeammateHealthComponent->HealthPercentageRemaining() >= 0.4)
+			{
+				bCanFollowTeammate = false;
+				CurrentAgentState = AgentState::ENGAGE;
+				Path.Empty();
+				MovementComponent->MaxWalkSpeed = 600.0f;
+			}
+			//If teammate is recovered, change to PATROL
+			//Exclude: if can't see teammate; NOTE: It shouldn't lose sight while following teammate.
+			else if ((bCanSeeTeammate && TeammateHealthComponent->HealthPercentageRemaining() >= 0.4))
+			{
+				bCanFollowTeammate = false;
+				CurrentAgentState = AgentState::PATROL;
+				MovementComponent->MaxWalkSpeed = 600.0f;
+			}
+			//If injured and can see the Player, change to EVADE
+			else if (bCanSeeActor && HealthComponent->HealthPercentageRemaining() < 0.4)
+			{
+				bCanFollowTeammate = false;
+				CurrentAgentState = AgentState::EVADE;
+				Path.Empty();
+				MovementComponent->MaxWalkSpeed = 600.0f;
+			}
 		}
 
+		if (CurrentAgentState == AgentState::DODGE)
+		{
+			Strafe(StrafeStartingPoint);
+		}
+		else
+		{
+			MoveAlongPath();
+		}
 	}
-
-	if (CurrentAgentState == AgentState::DODGE)
-	{
-		Strafe(StrafeStartingPoint);
-	}
-	else
-	{
-		MoveAlongPath();
-	}
+	
 }
 
 // Called to bind functionality to input
@@ -243,32 +246,37 @@ void AEnemyCharacter::AgentFollow()
 
 void AEnemyCharacter::SensePlayer(AActor* ActorSensed, FAIStimulus Stimulus)
 {
-	if (Stimulus.WasSuccessfullySensed())
-	{	
-		//Check if Actor sensed is another EnemyCharacter
-		if (ActorSensed->GetClass()->GetName() == FString("EnemyCharacterBlueprint_C"))
-		{
-			bCanSeeTeammate = true;
-			TeammateCharacter = Cast<AEnemyCharacter>(ActorSensed); //Cast the Actor class to the child EnemyCharacter Class 
-			
-			//Get Teammate's Health Information
-			TeammateHealthComponent = TeammateCharacter->HealthComponent;
-			UE_LOG(LogTemp, Warning, TEXT("ENEMY Detected: %s"), *TeammateCharacter->GetName());
-		}
-		//Check if Actor sensed is the PlayerCharacter
-		else if (ActorSensed->GetClass()->GetName() == FString("PlayerCharacterBlueprint_C"))
-		{
-			DetectedActor = ActorSensed;
-			bCanSeeActor = true;
-			UE_LOG(LogTemp, Warning, TEXT("PLAYER Detected"));
-		}
-	}
-	else 
+	//Ensure Authority version can only sense, then replicated this down
+	if (GetLocalRole() == ROLE_Authority)
 	{
-		bCanSeeActor = false;
-		bCanSeeTeammate = false; 
-		UE_LOG(LogTemp, Warning, TEXT("Player Lost"))
+		if (Stimulus.WasSuccessfullySensed())
+		{
+			//Check if Actor sensed is another EnemyCharacter
+			if (Cast<AEnemyCharacter>(ActorSensed))
+			{
+				bCanSeeTeammate = true;
+				TeammateCharacter = Cast<AEnemyCharacter>(ActorSensed); //Cast the Actor class to the child EnemyCharacter Class 
+
+				//Get Teammate's Health Information
+				TeammateHealthComponent = TeammateCharacter->HealthComponent;
+				UE_LOG(LogTemp, Warning, TEXT("ENEMY Detected: %s"), *TeammateCharacter->GetName());
+			}
+			//Check if Actor sensed is the PlayerCharacter
+			else if (Cast<APlayerCharacter>(ActorSensed))
+			{
+				DetectedActor = ActorSensed;
+				bCanSeeActor = true;
+				UE_LOG(LogTemp, Warning, TEXT("PLAYER Detected"));
+			}
+		}
+		else
+		{
+			bCanSeeActor = false;
+			bCanSeeTeammate = false;
+			UE_LOG(LogTemp, Warning, TEXT("Player Lost"))
+		}
 	}
+	
 }
 
 void AEnemyCharacter::OnHit()
@@ -341,7 +349,9 @@ void AEnemyCharacter::Strafe(FVector StartingPoint)
 		{
 			CrouchProp->SetPropertyValue_InContainer(AnimInst, false); // Stop crouching
 		}
-		CurrentAgentState = AgentState::ENGAGE;
+		//CurrentAgentState = AgentState::ENGAGE;
+		//If stop dodging, it should be somewhat clear of danger, thus back to patrol state
+		CurrentAgentState = AgentState::PATROL;
 	}
 }
 
