@@ -13,14 +13,32 @@
 void AMultiplayerGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessages)
 {
 	Super::InitGame(MapName, Options, ErrorMessages);
+	//Spawn the AI Manager on the server
+	AIManager = GetWorld()->SpawnActor<AAIManager>();
+	if (AIManager)
+	{
+		//Initialise AIManager variables
+		AIManager->AgentToSpawn = EnemyCharacterClass;
+		AIManager->NumAI = NumberOfAI; 
+	}
 
 	//Spawn the pickup manager on the server
 	PickupManager = GetWorld()->SpawnActor<APickupManager>();
 
-	//Initialise the pickup manager variables
-	if (PickupManager)
+	//GetNodeLocations() finds and assigns a procedural Map to the Procedural Map variable
+	//But also returns the Node Locations in the Map.
+	TArray<FVector> NodeLocations = GetNodeLocations();
+
+	//Initialise the Pickup Manager variables
+	if (PickupManager && ProceduralMap)
 	{
-		PickupManager->Init(GetNodeLocations(), WeaponPickupClass, MysteryBoxPickupClass, DestructibleActorClass, 10.0f);
+		PickupManager->Init(NodeLocations, WeaponPickupClass, MysteryBoxPickupClass, DestructibleActorClass, 10.0f);
+		ProceduralMap->AIManager = AIManager; 
+
+		//Spawn AI after a delay 
+		//Helps other components load first 
+		FTimerHandle SpawnTimer;
+		GetWorld()->GetTimerManager().SetTimer(SpawnTimer, AIManager, &AAIManager::CreateAgents, 3.0f, false);
 	}
 	else
 	{

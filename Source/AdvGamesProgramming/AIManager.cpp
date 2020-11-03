@@ -22,14 +22,13 @@ void AAIManager::BeginPlay()
 	Super::BeginPlay();
 	
 	PopulateNodes();
-	CreateAgents();
+	//CreateAgents(); //Multiplayer - Called in the gamemode 
 }
 
 // Called every frame
 void AAIManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 TArray<ANavigationNode*> AAIManager::GeneratePath(ANavigationNode* StartNode, ANavigationNode* EndNode)
