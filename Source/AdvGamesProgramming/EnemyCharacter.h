@@ -10,6 +10,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "PlayerCharacter.h"
+#include "TimerManager.h" 
 #include "EnemyCharacter.generated.h"
 
 UENUM()
@@ -61,6 +62,11 @@ public:
 	USkeletalMeshComponent* EnemyMesh;
 	UAnimInstance* AnimInst;
 	UBoolProperty* CrouchProp;
+
+	//Sense new Player Delay
+	FTimerHandle SenseDelayHandle; 
+	bool bCanSense; 
+	void AllowSensing(); 
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;

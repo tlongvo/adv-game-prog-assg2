@@ -26,19 +26,18 @@ void AEnemyCharacter::BeginPlay()
 	DetectedActor = nullptr; 
 	bCanSeeActor = false; 
 	bCanSeeTeammate = false; 
+	bCanSense = true; 
 	TeammateCharacter = nullptr; 
 	HealthComponent = FindComponentByClass<UHealthComponent>();
 	MovementComponent = FindComponentByClass<UCharacterMovementComponent>();
 
 	StrafeStartingPoint = GetActorLocation();
 
-
 	EnemyMesh = GetMesh();
 	
 	AnimInst = EnemyMesh->GetAnimInstance();
 		
 	CrouchProp = FindField<UBoolProperty>(AnimInst->GetClass(), "Crouching");
-
 
 	PathfindingNodeAccuracy = 100.0f;
 
@@ -249,7 +248,8 @@ void AEnemyCharacter::SensePlayer(AActor* ActorSensed, FAIStimulus Stimulus)
 	//Ensure Authority version can only sense, then replicated this down
 	if (GetLocalRole() == ROLE_Authority)
 	{
-		if (Stimulus.WasSuccessfullySensed())
+		//Check if the enemy is allowed to sense a actor again
+		if (Stimulus.WasSuccessfullySensed() && bCanSense)
 		{
 			//Check if Actor sensed is another EnemyCharacter
 			if (Cast<AEnemyCharacter>(ActorSensed))
@@ -268,15 +268,29 @@ void AEnemyCharacter::SensePlayer(AActor* ActorSensed, FAIStimulus Stimulus)
 				bCanSeeActor = true;
 				UE_LOG(LogTemp, Warning, TEXT("PLAYER Detected"));
 			}
+			
+			//Stop the AI from sensing a new target instantly
+			//And allow it to sense again after a delay via the Timer
+			bCanSense = false; 
+			GetWorldTimerManager().SetTimer(SenseDelayHandle, this, &AEnemyCharacter::AllowSensing, 1.0f, false);
 		}
 		else
 		{
 			bCanSeeActor = false;
 			bCanSeeTeammate = false;
+			bCanSense = true; //If can't see actor, then allow it to sense actor 
 			UE_LOG(LogTemp, Warning, TEXT("Player Lost"))
 		}
 	}
 	
+}
+
+void AEnemyCharacter::AllowSensing()
+{
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		bCanSense = true;
+	}
 }
 
 void AEnemyCharacter::OnHit()
