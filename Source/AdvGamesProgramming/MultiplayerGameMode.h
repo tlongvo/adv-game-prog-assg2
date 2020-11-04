@@ -6,6 +6,7 @@
 #include "GameFramework/GameMode.h"
 #include "ProcedurallyGeneratedMap.h"
 #include "PickupManager.h"
+#include "AIManager.h"
 #include "ClientPlayerState.h"
 #include "DestructibleActor.h"
 #include "MultiplayerGameMode.generated.h"
@@ -32,6 +33,12 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 		TSubclassOf<AActor> DestructibleActorClass; 
 
+	UPROPERTY(EditDefaultsOnly)
+		TSubclassOf<AEnemyCharacter> EnemyCharacterClass; 
+
+	UPROPERTY(EditAnywhere)
+		int NumberOfAI;
+
 	// -------------------- RESPAWN FUNCTIONS --------------------
 	/**
 	 * The main respawn function that will destroy the pawn and set the timer for the trigger respawn function.
@@ -51,4 +58,5 @@ private:
 	AProcedurallyGeneratedMap* ProceduralMap;
 	TArray<FVector> GetNodeLocations(); //If not Procedurally Generated
 	APickupManager* PickupManager;
+	AAIManager* AIManager; 
 };
