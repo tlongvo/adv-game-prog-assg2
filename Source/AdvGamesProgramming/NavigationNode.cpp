@@ -18,10 +18,10 @@ void ANavigationNode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	for (auto It = ConnectedNodes.CreateConstIterator(); It; ++It)
-	{
-		DrawDebugLine(GetWorld(), GetActorLocation(), (*It)->GetActorLocation(), FColor::Blue, true);
-	}
+//	for (auto It = ConnectedNodes.CreateConstIterator(); It; ++It)
+	//{
+		//DrawDebugLine(GetWorld(), GetActorLocation(), (*It)->GetActorLocation(), FColor::Blue, true);
+//	}
 	
 }
 

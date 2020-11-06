@@ -87,7 +87,7 @@ void AWeaponPickup::OnGenerate()
 		MuzzleVelocity = (RandBoolArray[1] ? FMath::RandRange(15000.0f, 20000.0f) : FMath::RandRange(10000.0f, 10000.0f));
 		MagazineSize = (RandBoolArray[2] ? FMath::RandRange(20, 40) : FMath::RandRange(20, 30));
 		WeaponAccuracy = (RandBoolArray[3] ? FMath::RandRange(50.0f, 100.0f) : FMath::RandRange(10.0f, 60.0f));
-		FireRate = (RandBoolArray[4] ? FMath::RandRange(0.08f, 0.2f) : FMath::RandRange(0.2f, 0.3f));
+		FireRate = (RandBoolArray[4] ? FMath::RandRange(0.08f, 0.14f) : FMath::RandRange(0.15f, 0.2f));
 
 		break;
 
